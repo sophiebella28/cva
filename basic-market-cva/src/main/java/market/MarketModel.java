@@ -4,7 +4,10 @@ import simudyne.core.abm.AgentBasedModel;
 import simudyne.core.abm.GlobalState;
 import simudyne.core.abm.Group;
 import simudyne.core.annotations.Input;
+import simudyne.core.annotations.ModelSettings;
 
+
+//@ModelSettings(timeUnit = "DAYS")
 public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
     public static final class Globals extends GlobalState {
         @Input(name = "Recovery Rate")
