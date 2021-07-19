@@ -1,4 +1,4 @@
-package org.example.models.market;
+package market;
 
 import simudyne.core.abm.AgentBasedModel;
 import simudyne.core.abm.GlobalState;
@@ -46,6 +46,6 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
 
         //getGlobals().informationSignal = new Random().nextGaussian() * getGlobals().volatilityInfo;
 
-        run(Institution.sendTrades(), Institution.makeTrades(), PriceDictator.calcPrices(), Institution.calculateCva());
+        run(Institution.sendTrades(), Institution.makeTrades(), PriceDictator.calcPrices(), Institution.calculateCva(getContext().getTick()));
     }
 }

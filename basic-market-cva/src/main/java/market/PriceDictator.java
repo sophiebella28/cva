@@ -1,9 +1,8 @@
-package org.example.models.market;
+package market;
 
 import simudyne.core.abm.Action;
 import simudyne.core.abm.Agent;
 import simudyne.core.functions.SerializableConsumer;
-import simudyne.core.graph.Message;
 
 public class PriceDictator extends Agent<MarketModel.Globals> {
 

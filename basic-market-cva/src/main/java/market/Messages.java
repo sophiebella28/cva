@@ -1,4 +1,4 @@
-package org.example.models.market;
+package market;
 
 import simudyne.core.graph.Message;
 

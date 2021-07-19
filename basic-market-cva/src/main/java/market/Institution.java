@@ -1,4 +1,4 @@
-package org.example.models.market;
+package market;
 
 import org.apache.commons.math3.random.RandomGenerator;
 import simudyne.core.abm.Action;
@@ -19,7 +19,7 @@ public class Institution extends Agent<MarketModel.Globals> {
     RandomGenerator random;
 
     @Variable
-    double cvaPercent;
+    public double cvaPercent;
 
 
     private static Action<Institution> action(SerializableConsumer<Institution> consumer) {
@@ -66,22 +66,36 @@ public class Institution extends Agent<MarketModel.Globals> {
         });
     }
 
-    public static Action<Institution> calculateCva() {
+    public static Action<Institution> calculateCva(long currentTick) {
         return action(institution -> {
             // find the longest time in the portfolio
             if (institution.portfolio.isEmpty()) {
                 institution.cvaPercent = 0;
             } else {
                 long last = Collections.max(institution.portfolio, Comparator.comparingLong(derivative -> derivative.endTick)).endTick;
-                long currentTick = institution.getContext().getTick();
+                //long currentTick = institution.getContext().getTick();
                 long ticksPerStep = institution.getGlobals().ticksPerStep;
                 double cvaSum = 0;
                 for (Derivative derivative : institution.portfolio) {
-
                     if (derivative.endTick >= currentTick) {
-                        for (long i = currentTick; i < last; i += ticksPerStep) {
-                            cvaSum += derivative.getExpectedExposure(i) * derivative.getDefaultProb(i, institution.getGlobals().hazardRate, ticksPerStep) * derivative.getDiscountFactor(i);
+                        for (long i = 0; i < last - currentTick; i += ticksPerStep) {
+                            double expectedExposure = derivative.getExpectedExposure(i);
+
+                            double defaultProb = derivative.getDefaultProb(i, institution.getGlobals().hazardRate, ticksPerStep);
+
+                            double discountFactor = derivative.getDiscountFactor(i);
+
+                            System.out.println("Exposure is " + expectedExposure);
+                            System.out.println("Default Probability is " + defaultProb);
+                            System.out.println("Discount Factor is " + discountFactor);
+
+                            double cvaIndividual = expectedExposure * defaultProb * discountFactor;
+
+                            System.out.println("Individual cva is " + cvaIndividual);
+                            cvaSum += cvaIndividual;
+
                         }
+                        System.out.println("Sum is " + cvaSum);
                     }
 
                 }

@@ -1,5 +1,4 @@
-import org.example.models.conway.GameOfLife;
-import org.example.models.market.MarketModel;
+import market.MarketModel;
 import org.example.models.trading.TradingModel;
 import simudyne.nexus.Server;
 

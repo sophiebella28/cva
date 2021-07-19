@@ -1,4 +1,4 @@
-package org.example.models.market;
+package market;
 
 public enum AssetType {
     ASSET1,
