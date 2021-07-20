@@ -4,7 +4,6 @@ import simudyne.core.abm.AgentBasedModel;
 import simudyne.core.abm.GlobalState;
 import simudyne.core.abm.Group;
 import simudyne.core.annotations.Input;
-import simudyne.core.annotations.ModelSettings;
 
 
 //@ModelSettings(timeUnit = "DAYS")
@@ -14,7 +13,7 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
         public double recoveryRate = 0.4;
 
         @Input(name = "Number of Institutions")
-        public int nmInstitutions = 20;
+        public int nmInstitutions = 5;
 
         @Input(name = "Trade Rate")
         public double tradeRate = 0.5;
@@ -24,20 +23,21 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
 
         @Input(name = "Number of ticks per iteration")
         public long ticksPerStep = 1;
+
+        public long currentTick = 0;
     }
 
     {
-        registerAgentTypes(Institution.class, PriceDictator.class);
-        registerLinkTypes(Links.TradeLink.class, Links.MarketLink.class);
+        registerAgentTypes(Institution.class, pricingDesk.class);
+        registerLinkTypes(Links.MarketLink.class);
     }
 
     @Override
     public void setup() {
         Group<Institution> institutionGroup = generateGroup(Institution.class, getGlobals().nmInstitutions);
-        Group<PriceDictator> priceGroup = generateGroup(PriceDictator.class, 1);
+        Group<pricingDesk> priceGroup = generateGroup(pricingDesk.class, 1);
 
         institutionGroup.fullyConnected(priceGroup, Links.MarketLink.class);
-        institutionGroup.fullyConnected(institutionGroup, Links.TradeLink.class);
         priceGroup.fullyConnected(institutionGroup, Links.MarketLink.class);
 
         super.setup();
@@ -47,8 +47,6 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
     public void step() {
         super.step();
 
-        //getGlobals().informationSignal = new Random().nextGaussian() * getGlobals().volatilityInfo;
-
-        run(Institution.sendTrades(), Institution.makeTrades(), PriceDictator.calcPrices(), Institution.calculateCva(getContext().getTick()));
+        run(Institution.sendTrades(), pricingDesk.calcPrices(), Institution.calculateCva(getContext().getTick()));
     }
 }

@@ -17,27 +17,26 @@ public abstract class Derivative {
     }
 
     // returns the expected exposure of this derivative at the given time as a percentage
-    double getExpectedExposure(long atTick) {
+    protected double getExpectedExposure(long atTick) {
         return Math.sqrt(atTick) * 0.01;
     }
 
-    double getDiscountFactor(long atTick) {
+    protected double getDiscountFactor(long atTick) {
         return Math.exp(-discountFactor * (atTick) * 0.08);
     }
 
-    double getDefaultProb(long atTick, double riskPercent, long ticksPerStep) {
+    protected double getDefaultProb(long atTick, double riskPercent, long ticksPerStep) {
         if (counterPartySurvives.get(atTick) == null) {
             calculateCntptySurvives(atTick, riskPercent, ticksPerStep);
         }
         if (atTick == (long) 0) {
             return 0;
         }
-        System.out.println(atTick);
         return counterPartySurvives.get(atTick - 1) - counterPartySurvives.get(atTick);
 
     }
 
-    void calculateCntptySurvives(long atTick, double riskPercent, long ticksPerStep) {
+    protected void calculateCntptySurvives(long atTick, double riskPercent, long ticksPerStep) {
         if (atTick == 0) {
             counterPartySurvives.put(atTick, 1.00);
         } else if (counterPartySurvives.get(atTick) == null) {
