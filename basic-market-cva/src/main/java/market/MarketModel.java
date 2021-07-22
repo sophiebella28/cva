@@ -20,6 +20,7 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
 
         @Input(name = "Hazard rate")
         public double hazardRate = 0.083;
+        // todo calculate this instead of taking it as an input
 
         @Input(name = "Number of ticks per iteration")
         public long ticksPerStep = 1;
@@ -28,14 +29,14 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
     }
 
     {
-        registerAgentTypes(Institution.class, pricingDesk.class);
+        registerAgentTypes(Institution.class, PricingDesk.class);
         registerLinkTypes(Links.MarketLink.class);
     }
 
     @Override
     public void setup() {
         Group<Institution> institutionGroup = generateGroup(Institution.class, getGlobals().nmInstitutions);
-        Group<pricingDesk> priceGroup = generateGroup(pricingDesk.class, 1);
+        Group<PricingDesk> priceGroup = generateGroup(PricingDesk.class, 1);
 
         institutionGroup.fullyConnected(priceGroup, Links.MarketLink.class);
         priceGroup.fullyConnected(institutionGroup, Links.MarketLink.class);
@@ -47,6 +48,6 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
     public void step() {
         super.step();
 
-        run(Institution.sendTrades(), pricingDesk.calcPrices(), Institution.calculateCva(getContext().getTick()));
+        run(Institution.sendTrades(), PricingDesk.calcPrices(), Institution.calculateCva(getContext().getTick()));
     }
 }

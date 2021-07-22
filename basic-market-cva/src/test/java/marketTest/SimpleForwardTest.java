@@ -12,6 +12,7 @@ import static org.junit.Assert.assertEquals;
 public class SimpleForwardTest {
     private TestKit<MarketModel.Globals> testKit;
     private Institution institution;
+    private PricingDesk pricingDesk;
     public static final int TARGET_LINK_ID = 1;
 
     @Before
@@ -19,9 +20,10 @@ public class SimpleForwardTest {
         testKit = TestKit.create(MarketModel.Globals.class);
         testKit.registerLinkTypes(Links.MarketLink.class);
         institution = testKit.addAgent(Institution.class);
+        pricingDesk = testKit.addAgent(PricingDesk.class);
 
         institution.addLink(TARGET_LINK_ID, Links.MarketLink.class);
-        institution.addDerivativeToPortfolio(new TestForward(0,60,0.05, AssetType.ASSET1, AssetType.ASSET2));
+        institution.addDerivativeToPortfolio(new TestForward(pricingDesk,institution,0, 60, 0.05, AssetType.ASSET1));
     }
 
     @Test
@@ -34,8 +36,9 @@ public class SimpleForwardTest {
     }
 
     public static class TestForward extends Derivative {
-        AssetType fixed;
-        AssetType floating;
+        AssetType assetType;
+        Trader floating;
+        Trader fixed;
         double[] expectedExposure = {0, 0.000442362,
                 0.000887097,
                 0.00133259,
@@ -100,10 +103,12 @@ public class SimpleForwardTest {
                 0.000212151
         };
 
-        public TestForward(long startTick, long endTick, double discountFactor, AssetType fixed, AssetType floating) {
+
+        public TestForward(Trader fixed, Trader floating, long startTick, long endTick, double discountFactor, AssetType assetType) {
             super(startTick, endTick, discountFactor);
             this.fixed = fixed;
             this.floating = floating;
+            this.assetType = assetType;
         }
 
         @Override

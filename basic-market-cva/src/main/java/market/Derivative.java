@@ -6,6 +6,8 @@ public abstract class Derivative {
     long startTick;
     public long endTick;
     double discountFactor;
+    double value;
+
     HashMap<Long, Double> counterPartySurvives;
 
     public Derivative(long startTick, long endTick, double discountFactor) {
@@ -18,7 +20,7 @@ public abstract class Derivative {
 
     // returns the expected exposure of this derivative at the given time as a percentage
     protected double getExpectedExposure(long atTick) {
-        return Math.sqrt(atTick) * 0.01;
+        return Math.sqrt(atTick) * 0.08 * 0.01;
     }
 
     protected double getDiscountFactor(long atTick) {
@@ -43,5 +45,7 @@ public abstract class Derivative {
             counterPartySurvives.put(atTick, counterPartySurvives.get(atTick - ticksPerStep) * Math.exp(-(ticksPerStep * 0.08) * riskPercent));
         }
     }
+
+    abstract double price();
 
 }
