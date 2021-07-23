@@ -6,7 +6,6 @@ public abstract class Derivative {
     long startTick;
     public long endTick;
     double discountFactor;
-    double value;
 
     HashMap<Long, Double> counterPartySurvives;
 
@@ -16,6 +15,7 @@ public abstract class Derivative {
         this.discountFactor = discountFactor;
         counterPartySurvives = new HashMap<>();
         counterPartySurvives.put((long) 0, 1.00);
+
     }
 
     // returns the expected exposure of this derivative at the given time as a percentage
@@ -46,6 +46,6 @@ public abstract class Derivative {
         }
     }
 
-    abstract double price();
+    protected abstract void calculateStartingValue();
 
 }

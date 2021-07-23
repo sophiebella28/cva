@@ -4,7 +4,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 
 
 public class BankAsset implements AssetType{
-    double price;
+    double price = 4.0;
 
     @Override
     public double getPrice() {

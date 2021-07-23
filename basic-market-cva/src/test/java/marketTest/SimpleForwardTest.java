@@ -23,7 +23,7 @@ public class SimpleForwardTest {
         pricingDesk = testKit.addAgent(PricingDesk.class);
 
         institution.addLink(TARGET_LINK_ID, Links.MarketLink.class);
-        institution.addDerivativeToPortfolio(new TestForward(pricingDesk,institution,0, 60, 0.05, AssetType.ASSET1));
+        institution.addDerivativeToPortfolio(new TestForward(pricingDesk,institution,0, 60, 0.05, new BankAsset()));
     }
 
     @Test
@@ -39,6 +39,7 @@ public class SimpleForwardTest {
         AssetType assetType;
         Trader floating;
         Trader fixed;
+
         double[] expectedExposure = {0, 0.000442362,
                 0.000887097,
                 0.00133259,
@@ -114,6 +115,11 @@ public class SimpleForwardTest {
         @Override
        protected double getExpectedExposure(long atTick) {
             return expectedExposure[(int) atTick];
+        }
+
+        @Override
+        protected void calculateStartingValue() {
+
         }
     }
 }

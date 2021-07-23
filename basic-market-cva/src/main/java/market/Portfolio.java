@@ -14,6 +14,9 @@ public class Portfolio {
     @Variable
     public double cvaPercent;
 
+    @Variable
+    public double totalValue;
+
     public Portfolio() {
         derivativeList = new ArrayList<>();
     }
@@ -54,5 +57,20 @@ public class Portfolio {
             cvaPercent = (1 -recoveryRate) * cvaSum;
         }
         return cvaPercent;
+    }
+
+    public void closeTrades(long currentTick) {
+        for (Derivative derivative : derivativeList) {
+            if (derivative.endTick < currentTick) {
+                if (derivative instanceof Forward) {
+                    Forward forward = (Forward) derivative;
+                    forward.floating.numberOfAssets += forward.amountOfAsset;
+                    forward.fixed.numberOfAssets += forward.agreedValue * forward.amountOfAsset;
+                    totalValue +=  forward.amountOfAsset * ( forward.agreedValue - forward.assetType.getPrice());
+                    // need a measure of whether or not this was actually lost idk
+                }
+            }
+
+        }
     }
 }

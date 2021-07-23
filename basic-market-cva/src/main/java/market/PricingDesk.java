@@ -15,6 +15,8 @@ public class PricingDesk extends Trader{
     public void init() {
         super.init();
         bankAsset = new BankAsset();
+        totalValue = 1500;
+        numberOfAssets = 100;
     }
 
     private static Action<PricingDesk> action(SerializableConsumer<PricingDesk> consumer) {
@@ -28,7 +30,7 @@ public class PricingDesk extends Trader{
             for (Institution inst : fromList) {
                 Trader floating;
                 Trader fixed;
-                if (inst.random.nextBoolean()) {
+                if (inst.random.nextBoolean() && inst.numberOfAssets > 0) {
                     floating = inst;
                     fixed = pricingDesk;
                 } else {
@@ -37,7 +39,9 @@ public class PricingDesk extends Trader{
                 }
                 long startTick = pricingDesk.getContext().getTick();
                 long endTick = startTick + (int) (pricingDesk.getPrng().generator.nextGaussian() * 60) + 60;
-                Forward forwardToAdd = new Forward(fixed,floating, startTick, endTick, 0.05, pricingDesk.bankAsset);
+                // for now only buying one of each asset but might change that
+                // changing would involve adding an int to the message so each trader could have strategy
+                Forward forwardToAdd = new Forward(fixed,floating, startTick, endTick, 0.05, pricingDesk.bankAsset, 1);
                 floating.addDerivativeToPortfolio(forwardToAdd);
                 fixed.addDerivativeToPortfolio(forwardToAdd);
             }

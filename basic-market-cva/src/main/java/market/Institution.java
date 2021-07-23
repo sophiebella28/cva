@@ -24,6 +24,7 @@ public class Institution extends Trader {
 
     public static Action<Institution> calculateCva(long currentTick) {
         return action(institution -> {
+            institution.portfolio.closeTrades(currentTick);
             institution.updateCva(currentTick);
         });
     }
@@ -36,6 +37,8 @@ public class Institution extends Trader {
         random = this.getPrng().generator;
         // later on i will probably add better logic for assigning companies the assets they trade but for now
         // each company is randomly assigned an asset
+        totalValue = 1500;
+        numberOfAssets = 0;
     }
 
 
