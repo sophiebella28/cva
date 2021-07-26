@@ -35,10 +35,8 @@ public class Institution extends Trader {
         super.init();
         portfolio = new Portfolio();
         random = this.getPrng().generator;
-        // later on i will probably add better logic for assigning companies the assets they trade but for now
-        // each company is randomly assigned an asset
         totalValue = 1500;
-        numberOfAssets = 0;
+        numberOfAssets = 10;
     }
 
 

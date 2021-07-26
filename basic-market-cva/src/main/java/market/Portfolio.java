@@ -61,14 +61,17 @@ public class Portfolio {
 
     public void closeTrades(long currentTick) {
         for (Derivative derivative : derivativeList) {
-            if (derivative.endTick < currentTick) {
+            if (derivative.endTick == currentTick) {
                 if (derivative instanceof Forward) {
                     Forward forward = (Forward) derivative;
                     forward.floating.numberOfAssets += forward.amountOfAsset;
-                    forward.fixed.numberOfAssets += forward.agreedValue * forward.amountOfAsset;
-                    totalValue +=  forward.amountOfAsset * ( forward.agreedValue - forward.assetType.getPrice());
+                    forward.fixed.numberOfAssets -= forward.amountOfAsset;
+                    forward.fixed.totalValue += forward.agreedValue * forward.amountOfAsset;
+                    forward.floating.totalValue -= forward.agreedValue * forward.amountOfAsset;
+                    totalValue += forward.amountOfAsset * ( forward.agreedValue - forward.assetType.getPrice());
                     // need a measure of whether or not this was actually lost idk
                 }
+
             }
 
         }

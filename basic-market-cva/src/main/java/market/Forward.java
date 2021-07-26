@@ -21,4 +21,8 @@ public class Forward extends Derivative {
     protected void calculateStartingValue() {
         agreedValue = assetType.getPrice() * Math.exp(discountFactor * (endTick - startTick));
     }
+
+    public double getAgreedValue() {
+        return agreedValue;
+    }
 }
