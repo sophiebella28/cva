@@ -17,8 +17,8 @@ public abstract class Trader extends Agent<MarketModel.Globals> {
         portfolio.add(derivative);
     }
 
-    void updateCva(long currentTick) {
-        cvaPercent = portfolio.updateCva(currentTick,getGlobals().ticksPerStep, getGlobals().hazardRate, getGlobals().recoveryRate);
+    void updateCva(double currentTime) {
+        cvaPercent = portfolio.updateCva(currentTime,getGlobals().timeStep, getGlobals().hazardRate, getGlobals().recoveryRate);
     }
 
 

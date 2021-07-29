@@ -30,19 +30,20 @@ public class Portfolio {
         derivativeList.add(derivative);
     }
 
-    public double updateCva(long currentTick, long ticksPerStep, double hazardRate, double recoveryRate) {
+    public double updateCva(double currentTime, double timeStep, double hazardRate, double recoveryRate) {
         // find the longest time in the portfolio
         if (isEmpty()) {
             cvaPercent = 0;
         } else {
-            long last = Collections.max(derivativeList, Comparator.comparingLong(derivative -> derivative.endTick)).endTick;
+            double last = Collections.max(derivativeList, Comparator.comparingDouble(derivative -> derivative.endTime)).endTime;
             double cvaSum = 0;
             for (Derivative derivative : derivativeList) {
-                if (derivative.endTick >= currentTick) {
-                    for (long i = 0; i < last - currentTick; i += ticksPerStep) {
+                if (derivative.endTime >= currentTime) {
+                    for (double i = 0; i < last - currentTime; i += timeStep) {
+                        i = Math.round(i * 100) / 100.0;
                         double expectedExposure = derivative.getExpectedExposure(i);
 
-                        double defaultProb = derivative.getDefaultProb(i, hazardRate, ticksPerStep);
+                        double defaultProb = derivative.getDefaultProb(i, hazardRate, timeStep);
 
                         double discountFactor = derivative.getDiscountFactor(i);
 
@@ -54,14 +55,14 @@ public class Portfolio {
                 }
 
             }
-            cvaPercent = (1 -recoveryRate) * cvaSum;
+            cvaPercent = (1 - recoveryRate) * cvaSum;
         }
         return cvaPercent;
     }
 
-    public void closeTrades(long currentTick) {
+    public void closeTrades(double currentTime) {
         for (Derivative derivative : derivativeList) {
-            if (derivative.endTick == currentTick) {
+            if (derivative.endTime == currentTime) {
                 if (derivative instanceof Forward) {
                     Forward forward = (Forward) derivative;
                     forward.floating.numberOfAssets += forward.amountOfAsset;
@@ -73,7 +74,6 @@ public class Portfolio {
                 }
 
             }
-
         }
     }
 }

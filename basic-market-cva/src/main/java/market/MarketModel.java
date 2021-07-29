@@ -22,10 +22,23 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
         public double hazardRate = 0.083;
         // todo calculate this instead of taking it as an input
 
-        @Input(name = "Number of ticks per iteration")
-        public long ticksPerStep = 1;
+        @Input(name = "Fraction of a year per tick")
+        public double timeStep = 0.08;
 
-        public long currentTick = 0;
+        @Input(name = "Mean Reversion")
+        public double meanRev = 0.1;
+
+        @Input(name = "Equilibrium")
+        public double equilibrium = 0.05;
+
+        @Input(name = "Volatility")
+        public double volatility = 0.01;
+
+        @Input(name = "Swap rate")
+        public double swapRate = 0.05;
+
+
+        public double time = 0;
     }
 
     {
@@ -47,7 +60,8 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
     @Override
     public void step() {
         super.step();
-
-        run(Institution.sendTrades(), PricingDesk.calcPrices(), Institution.calculateCva(getContext().getTick()));
+        run(Institution.sendTrades(), PricingDesk.calcPrices(), Institution.calculateCva(getGlobals().time));
+        getGlobals().time += getGlobals().timeStep;
+        getGlobals().time = Math.round(getGlobals().time * 100)/ 100.0;
     }
 }
