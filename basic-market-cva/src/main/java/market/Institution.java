@@ -22,10 +22,10 @@ public class Institution extends Trader {
     }
 
 
-    public static Action<Institution> calculateCva(double currentTime) {
+    public static Action<Institution> calculateCva(long currentTick) {
         return action(institution -> {
-            institution.portfolio.closeTrades(currentTime);
-            institution.updateCva(currentTime);
+            institution.portfolio.closeTrades(currentTick);
+            institution.updateCva(currentTick);
         });
     }
 

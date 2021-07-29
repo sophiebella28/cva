@@ -1,5 +1,6 @@
 package market;
 
+import org.apache.commons.math3.random.RandomGenerator;
 import simudyne.core.annotations.Variable;
 
 import java.util.ArrayList;
@@ -30,22 +31,23 @@ public class Portfolio {
         derivativeList.add(derivative);
     }
 
-    public double updateCva(double currentTime, double timeStep, double hazardRate, double recoveryRate) {
+    public double updateCva(long currentTick, double timeStep, double hazardRate, double recoveryRate, double meanRev, double equilibrium, double volatility, double swapRate, RandomGenerator generator) {
         // find the longest time in the portfolio
         if (isEmpty()) {
             cvaPercent = 0;
         } else {
-            double last = Collections.max(derivativeList, Comparator.comparingDouble(derivative -> derivative.endTime)).endTime;
+            long last = Collections.max(derivativeList, Comparator.comparingLong(derivative -> derivative.endTick)).endTick;
             double cvaSum = 0;
             for (Derivative derivative : derivativeList) {
-                if (derivative.endTime >= currentTime) {
-                    for (double i = 0; i < last - currentTime; i += timeStep) {
-                        i = Math.round(i * 100) / 100.0;
-                        double expectedExposure = derivative.getExpectedExposure(i);
+                if (derivative.endTick >= currentTick) {
+                    derivative.calculateExpectedExposure(derivative.endTick - currentTick, timeStep, 0.05, meanRev, equilibrium, volatility, swapRate, generator);
+                    for (long i = 0; i < last - currentTick; i ++) {
+                        System.out.println(currentTick);
+                        double expectedExposure = derivative.getExpectedExposure(i, timeStep);
 
                         double defaultProb = derivative.getDefaultProb(i, hazardRate, timeStep);
 
-                        double discountFactor = derivative.getDiscountFactor(i);
+                        double discountFactor = derivative.getDiscountFactor(i, timeStep);
 
                         double cvaIndividual = expectedExposure * defaultProb * discountFactor;
 
@@ -60,9 +62,9 @@ public class Portfolio {
         return cvaPercent;
     }
 
-    public void closeTrades(double currentTime) {
+    public void closeTrades(long currentTick) {
         for (Derivative derivative : derivativeList) {
-            if (derivative.endTime == currentTime) {
+            if (derivative.endTick == currentTick) {
                 if (derivative instanceof Forward) {
                     Forward forward = (Forward) derivative;
                     forward.floating.numberOfAssets += forward.amountOfAsset;

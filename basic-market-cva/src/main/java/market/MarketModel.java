@@ -60,8 +60,7 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
     @Override
     public void step() {
         super.step();
-        run(Institution.sendTrades(), PricingDesk.calcPrices(), Institution.calculateCva(getGlobals().time));
-        getGlobals().time += getGlobals().timeStep;
-        getGlobals().time = Math.round(getGlobals().time * 100)/ 100.0;
+        run(Institution.sendTrades(), PricingDesk.calcPrices(), Institution.calculateCva(getContext().getTick()));
+        getGlobals().time = getContext().getTick() * getGlobals().timeStep;
     }
 }
