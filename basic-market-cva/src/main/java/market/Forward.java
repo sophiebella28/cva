@@ -12,7 +12,7 @@ public class Forward extends Derivative {
     double agreedValue = 0;
     // todo: research whether forwards have interest rates
 
-    HashMap<Double, Double> expectedExposure  = new HashMap<>();
+    HashMap<Double, Double> expectedExposure = new HashMap<>();
 
     public Forward(Trader fixed, Trader floating, long startTick, long endTick, double discountFactor, AssetType assetType, int amountOfAsset, double timeStep) {
         super(startTick, endTick, discountFactor);
@@ -36,24 +36,19 @@ public class Forward extends Derivative {
     public void calculateExpectedExposure(long duration, double timeStep, double interestRate, double meanRev, double equilibrium, double volatility, double swapRate, RandomGenerator generator) {
 
         for (int i = 0; i < 250; i++) {
-            //System.out.println("i " + i);
             // todo: consider taking an uneven sample of time points
             double sampleInterest = interestRate;
-            for (int j = 0; j < duration; j ++) {
-
-                //System.out.println("j " + j);
+            for (int j = 0; j < duration; j++) {
                 sampleInterest = sampleInterest + meanRev * (equilibrium - sampleInterest) * timeStep + generator.nextGaussian() * Math.sqrt(timeStep) * volatility;
                 double total = 0.0;
                 double finalDiscount = 0.0;
-                for (int k = 0; k < (duration - j) ; k ++) {
-                    //System.out.println("k " + k);
-                   // System.out.println("j " + j);
-                   // System.out.println("timestep " + timeStep);
+                for (int k = 1; k <= (duration - j); k++) {
                     double B = (1 - Math.exp(-meanRev * k * timeStep)) / meanRev;
+                    //todo: dont need to recalculate A and B every time -- FIX
                     double A = Math.exp(((B - k * timeStep) * (Math.pow(meanRev, 2) * equilibrium - Math.pow(volatility, 2) / 2)) / Math.pow(meanRev, 2) - (Math.pow(volatility, 2) * Math.pow(B, 2) / (4 * meanRev)));
                     double discount = A * Math.exp(-B * sampleInterest);
                     total += discount;
-                    if (k == (duration - j - 1)) {
+                    if (k == (duration - j )) {
                         finalDiscount = discount;
                     }
                 }
@@ -63,7 +58,6 @@ public class Forward extends Derivative {
                 if (mtm > 0) {
                     double prevExposure = expectedExposure.getOrDefault(j * timeStep, 0.0);
                     expectedExposure.put(j * timeStep, prevExposure + mtm / 250);
-                    System.out.println("Adding key for " + j * timeStep);
                 }
 
             }

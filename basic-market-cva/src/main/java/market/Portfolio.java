@@ -42,7 +42,7 @@ public class Portfolio {
                 if (derivative.endTick >= currentTick) {
                     derivative.calculateExpectedExposure(derivative.endTick - currentTick, timeStep, 0.05, meanRev, equilibrium, volatility, swapRate, generator);
                     for (long i = 0; i < last - currentTick; i ++) {
-                        System.out.println(currentTick);
+
                         double expectedExposure = derivative.getExpectedExposure(i, timeStep);
 
                         double defaultProb = derivative.getDefaultProb(i, hazardRate, timeStep);

@@ -23,7 +23,7 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
         // todo calculate this instead of taking it as an input
 
         @Input(name = "Fraction of a year per tick")
-        public double timeStep = 0.08;
+        public double timeStep = 0.25;
 
         @Input(name = "Mean Reversion")
         public double meanRev = 0.1;

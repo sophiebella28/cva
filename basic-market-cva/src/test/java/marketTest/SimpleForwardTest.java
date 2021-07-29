@@ -113,7 +113,10 @@ public class SimpleForwardTest {
             this.assetType = assetType;
         }
 
-
+        @Override
+        protected double getExpectedExposure(long atTick, double timeStep) {
+            return expectedExposure[(int) atTick];
+        }
 
         @Override
         protected void calculateStartingValue(double timeStep) {
