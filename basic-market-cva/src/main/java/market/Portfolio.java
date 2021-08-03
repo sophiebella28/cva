@@ -12,6 +12,8 @@ public class Portfolio {
 
     List<Derivative> derivativeList;
 
+    List<CDS> hedgingList;
+
     @Variable
     public double cvaPercent;
 
@@ -20,20 +22,29 @@ public class Portfolio {
 
     public Portfolio() {
         derivativeList = new ArrayList<>();
+        hedgingList = new ArrayList<>();
     }
 
 
-    public boolean isEmpty() {
+    public boolean derivativeIsEmpty() {
         return derivativeList.isEmpty();
+    }
+
+    public boolean hedgingIsEmpty() {
+        return hedgingList.isEmpty();
     }
 
     public void add(Derivative derivative) {
         derivativeList.add(derivative);
     }
 
+    public void add(CDS cds) {
+        hedgingList.add(cds);
+    }
+
     public double updateCva(long currentTick, double timeStep, double hazardRate, double recoveryRate, double meanRev, double equilibrium, double volatility, double swapRate, RandomGenerator generator) {
         // find the longest time in the portfolio
-        if (isEmpty()) {
+        if (derivativeIsEmpty()) {
             cvaPercent = 0;
         } else {
             long last = Collections.max(derivativeList, Comparator.comparingLong(derivative -> derivative.endTick)).endTick;
@@ -41,7 +52,7 @@ public class Portfolio {
             for (Derivative derivative : derivativeList) {
                 if (derivative.endTick >= currentTick) {
                     derivative.calculateExpectedExposure(derivative.endTick - currentTick, timeStep, 0.05, meanRev, equilibrium, volatility, swapRate, generator);
-                    for (long i = 0; i < last - currentTick; i ++) {
+                    for (long i = 0; i < last - currentTick; i++) {
 
                         double expectedExposure = derivative.getExpectedExposure(i, timeStep);
 
@@ -71,7 +82,7 @@ public class Portfolio {
                     forward.fixed.numberOfAssets -= forward.amountOfAsset;
                     forward.fixed.totalValue += forward.agreedValue * forward.amountOfAsset;
                     forward.floating.totalValue -= forward.agreedValue * forward.amountOfAsset;
-                    totalValue += forward.amountOfAsset * ( forward.agreedValue - forward.assetType.getPrice());
+                    totalValue += forward.amountOfAsset * (forward.agreedValue - forward.assetType.getPrice());
                     // need a measure of whether or not this was actually lost idk
                 }
 

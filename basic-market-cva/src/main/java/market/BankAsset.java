@@ -16,8 +16,8 @@ public class BankAsset implements AssetType{
 
 
     @Override
-    public double updatePrice(RandomGenerator random) {
-        price = Math.abs(price + random.nextGaussian());
+    public double updatePrice(double priceChange) {
+        price = Math.abs(price + priceChange);
         return price;
     }
 }

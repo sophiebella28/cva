@@ -3,7 +3,10 @@ package market;
 import simudyne.core.abm.AgentBasedModel;
 import simudyne.core.abm.GlobalState;
 import simudyne.core.abm.Group;
+import simudyne.core.abm.Split;
 import simudyne.core.annotations.Input;
+
+import java.util.Random;
 
 
 //@ModelSettings(timeUnit = "DAYS")
@@ -14,6 +17,9 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
 
         @Input(name = "Number of Institutions")
         public int nmInstitutions = 5;
+
+        @Input(name = "Number of Momentum Institutions")
+        public int nmMomInstitutions = 1;
 
         @Input(name = "Trade Rate")
         public double tradeRate = 0.5;
@@ -31,27 +37,45 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
         @Input(name = "Equilibrium")
         public double equilibrium = 0.05;
 
-        @Input(name = "Volatility")
+        @Input(name = "Volatility for cva calculation")
         public double volatility = 0.01;
 
         @Input(name = "Swap rate")
         public double swapRate = 0.05;
 
+        @Input(name = "Volatility of Information Signal")
+        public double volatilityInfo = 0.001;
+
+        public double informationSignal = new Random().nextGaussian() * volatilityInfo;
+
+        @Input(name = "Momentum: Short Term Average")
+        public long shortTermAverage = 7;
+
+        @Input(name = "Momentum: Long Term Average")
+        public long longTermAverage = 21;
+
+        @Input(name = "Custom Trader Activity")
+        public double traderActivity = 0.1;
 
         public double time = 0;
     }
 
     {
-        registerAgentTypes(Institution.class, PricingDesk.class);
+        registerAgentTypes(Institution.class, PricingDesk.class, MomentumInstitution.class);
         registerLinkTypes(Links.MarketLink.class);
     }
 
     @Override
     public void setup() {
         Group<Institution> institutionGroup = generateGroup(Institution.class, getGlobals().nmInstitutions);
+
+        Group<MomentumInstitution> momInstitutionGroup = generateGroup(MomentumInstitution.class, getGlobals().nmMomInstitutions);
         Group<PricingDesk> priceGroup = generateGroup(PricingDesk.class, 1);
 
         institutionGroup.fullyConnected(priceGroup, Links.MarketLink.class);
+        momInstitutionGroup.fullyConnected(priceGroup, Links.MarketLink.class);
+
+        priceGroup.fullyConnected(momInstitutionGroup, Links.MarketLink.class);
         priceGroup.fullyConnected(institutionGroup, Links.MarketLink.class);
 
         super.setup();
@@ -60,7 +84,12 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
     @Override
     public void step() {
         super.step();
-        run(Institution.sendTrades(), PricingDesk.calcPrices(), Institution.calculateCva(getContext().getTick()));
+
+
+        getGlobals().informationSignal = new Random().nextGaussian() * getGlobals().volatilityInfo;
+
+        run(Split.create(Institution.sendTrades(), MomentumInstitution.sendTrades()), PricingDesk.calcPrices(),
+                Split.create(Institution.updateFields(getContext().getTick()), MomentumInstitution.updateFields(getContext().getTick())));
         getGlobals().time = getContext().getTick() * getGlobals().timeStep;
     }
 }

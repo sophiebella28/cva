@@ -29,9 +29,9 @@ public class SimpleForwardTest {
 
     @Test
     public void cvaCalculationShouldMatchSpreadsheet() {
-        testKit.send(Messages.CvaUpdate.class).to(institution);
+        testKit.send(Messages.UpdateFields.class).to(institution);
 
-        TestResult testResult = testKit.testAction(institution,Institution.calculateCva(0));
+        TestResult testResult = testKit.testAction(institution,Institution.updateFields(0));
 
         assertEquals(0.00085, institution.portfolio.cvaPercent, 0.00001);
     }

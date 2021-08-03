@@ -5,6 +5,6 @@ import org.apache.commons.math3.random.RandomGenerator;
 public interface AssetType {
 
     double getPrice();
-    double updatePrice(RandomGenerator random);
+    double updatePrice(double priceChange);
 }
 

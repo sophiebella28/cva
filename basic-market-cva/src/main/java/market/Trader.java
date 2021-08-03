@@ -22,4 +22,12 @@ public abstract class Trader extends Agent<MarketModel.Globals> {
     }
 
 
+    protected void sell() {
+        getLinks(Links.MarketLink.class).send(Messages.ForwardFixedTrade.class, (msg, link) -> msg.from = this);
+
+    }
+
+    protected void buy() {
+        getLinks(Links.MarketLink.class).send(Messages.ForwardFloatingTrade.class, (msg, link) -> msg.from = this);
+    }
 }
