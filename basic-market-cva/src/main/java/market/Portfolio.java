@@ -78,15 +78,31 @@ public class Portfolio {
             if (derivative.endTick == currentTick) {
                 if (derivative instanceof Forward) {
                     Forward forward = (Forward) derivative;
-                    forward.floating.numberOfAssets += forward.amountOfAsset;
-                    forward.fixed.numberOfAssets -= forward.amountOfAsset;
-                    forward.fixed.totalValue += forward.agreedValue * forward.amountOfAsset;
-                    forward.floating.totalValue -= forward.agreedValue * forward.amountOfAsset;
+                    Trader floating = forward.floating;
+                    Trader fixed = forward.fixed;
+                    double valueChange = forward.agreedValue * forward.amountOfAsset;
+
+                    floating.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = valueChange).to(fixed.getID());
+                    fixed.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = -valueChange).to(floating.getID());
+
+                    floating.send(Messages.ChangeAssets.class, (msg) -> msg.noOfAssets = -forward.amountOfAsset).to(fixed.getID());
+                    fixed.send(Messages.ChangeAssets.class, (msg) -> msg.noOfAssets = forward.amountOfAsset).to(floating.getID());
+
                     totalValue += forward.amountOfAsset * (forward.agreedValue - forward.assetType.getPrice());
                     // need a measure of whether or not this was actually lost idk
                 }
 
             }
         }
+
+        for (CDS cds : hedgingList) {
+            if(currentTick == cds.startTick || (currentTick - cds.startTick ) % 12 == 0 ) {
+                Trader trader = cds.buyer;
+                CDSDesk desk = cds.desk;
+                trader.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = -cds.interestRate * cds.faceValue).to(desk.getID());
+                desk.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = cds.interestRate * cds.faceValue).to(trader.getID());
+            }
+        }
+
     }
 }

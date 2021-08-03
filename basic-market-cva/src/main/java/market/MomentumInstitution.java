@@ -5,7 +5,9 @@ import simudyne.core.annotations.Variable;
 import simudyne.core.functions.SerializableConsumer;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MomentumInstitution extends Trader {
 
@@ -44,6 +46,16 @@ public class MomentumInstitution extends Trader {
                     institution.portfolio.closeTrades(currentTick);
                     institution.updateCva(currentTick);
                     institution.historicalPrices.put(institution.getContext().getTick(), institution.getMessageOfType(Messages.UpdateFields.class).price);
+                });
+    }
+
+    public static Action<MomentumInstitution> getValueChanges(long currentTick) {
+        return action(
+                institution -> {
+                    double totalValueChange = institution.getMessagesOfType(Messages.ChangeValue.class).stream().map(link -> link.valueChange).reduce(0.0, Double::sum);
+                    int totalAssetChange = institution.getMessagesOfType(Messages.ChangeAssets.class).stream().map(link -> link.noOfAssets).reduce(0, Integer::sum);
+                    institution.totalValue += totalValueChange;
+                    institution.numberOfAssets += totalAssetChange;
                 });
     }
 

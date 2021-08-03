@@ -42,6 +42,16 @@ public class Institution extends Trader {
         });
     }
 
+    public static Action<Institution> getValueChanges(long currentTick) {
+        return action(
+                institution -> {
+                    double totalValueChange = institution.getMessagesOfType(Messages.ChangeValue.class).stream().map(link -> link.valueChange).reduce(0.0, Double::sum);
+                    int totalAssetChange = institution.getMessagesOfType(Messages.ChangeAssets.class).stream().map(link -> link.noOfAssets).reduce(0, Integer::sum);
+                    institution.totalValue += totalValueChange;
+                    institution.numberOfAssets += totalAssetChange;
+                });
+    }
+
 
     @Override
     public void init() {

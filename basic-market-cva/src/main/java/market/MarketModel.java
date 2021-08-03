@@ -89,7 +89,8 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
         getGlobals().informationSignal = new Random().nextGaussian() * getGlobals().volatilityInfo;
 
         run(Split.create(Institution.sendTrades(), MomentumInstitution.sendTrades()), PricingDesk.calcPrices(),
-                Split.create(Institution.updateFields(getContext().getTick()), MomentumInstitution.updateFields(getContext().getTick())));
+                Split.create(Institution.updateFields(getContext().getTick()), MomentumInstitution.updateFields(getContext().getTick())),
+                Split.create(Institution.getValueChanges(getContext().getTick()), MomentumInstitution.getValueChanges(getContext().getTick())) );
         getGlobals().time = getContext().getTick() * getGlobals().timeStep;
     }
 }

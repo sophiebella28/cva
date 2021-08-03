@@ -4,6 +4,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 import simudyne.core.abm.Action;
 import simudyne.core.annotations.Variable;
 import simudyne.core.functions.SerializableConsumer;
+import simudyne.core.graph.Message;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,6 +47,7 @@ public class PricingDesk extends Trader {
             double priceChange = pricingDesk.getPrng().generator.nextGaussian();
             pricingDesk.price = pricingDesk.bankAsset.updatePrice(priceChange);
             pricingDesk.getLinks(Links.MarketLink.class).send(Messages.UpdateFields.class, (msg,link) -> { msg.priceChange = priceChange; msg.price = pricingDesk.price;});
+
         });
     }
 

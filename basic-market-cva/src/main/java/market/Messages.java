@@ -11,7 +11,12 @@ public class Messages {
     public Trader from;
   }
 
-  public static class MarketPriceChange extends Message {
+  public static class ChangeAssets extends Message {
+    public int noOfAssets;
+  }
+
+  public static class ChangeValue extends Message {
+    public double valueChange;
   }
 
   public static class UpdateFields extends Message {
