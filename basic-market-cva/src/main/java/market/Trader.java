@@ -4,7 +4,7 @@ import simudyne.core.abm.Agent;
 import simudyne.core.annotations.Variable;
 
 public abstract class Trader extends Agent<MarketModel.Globals> {
-    public Portfolio portfolio = new Portfolio();
+    public Portfolio portfolio;
     @Variable
     public double totalValue;
     @Variable
@@ -17,13 +17,14 @@ public abstract class Trader extends Agent<MarketModel.Globals> {
         portfolio.add(derivative);
     }
 
-    void updateCva(long currentTick) {
-        cvaPercent = portfolio.updateCva(currentTick,getGlobals().timeStep, getGlobals().hazardRate, getGlobals().recoveryRate, getGlobals().meanRev, getGlobals().equilibrium, getGlobals().volatility, getGlobals().swapRate, getPrng().generator);
+    void updateCva(long currentTick, double stockPrice) {
+        cvaPercent = portfolio.updateCva(currentTick,getGlobals().timeStep, getGlobals().hazardRate, getGlobals().recoveryRate, getGlobals().meanRev, getGlobals().volatility, stockPrice, getPrng().generator);
     }
 
 
     protected void sell() {
         getLinks(Links.MarketLink.class).send(Messages.ForwardFixedTrade.class, (msg, link) -> msg.from = this);
+
 
     }
 

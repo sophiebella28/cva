@@ -32,13 +32,13 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
         public double timeStep = 0.25;
 
         @Input(name = "Mean Reversion")
-        public double meanRev = 0.1;
+        public double meanRev = 14.8;
 
         @Input(name = "Equilibrium")
         public double equilibrium = 0.05;
 
         @Input(name = "Volatility for cva calculation")
-        public double volatility = 0.01;
+        public double volatility = 9.9;
 
         @Input(name = "Swap rate")
         public double swapRate = 0.05;
@@ -61,7 +61,7 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
     }
 
     {
-        registerAgentTypes(Institution.class, PricingDesk.class, MomentumInstitution.class);
+        registerAgentTypes(Institution.class, PricingDesk.class, MomentumInstitution.class, PricingDesk.class);
         registerLinkTypes(Links.MarketLink.class);
     }
 

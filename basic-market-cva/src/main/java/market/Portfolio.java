@@ -1,6 +1,7 @@
 package market;
 
 import org.apache.commons.math3.random.RandomGenerator;
+import simudyne.core.abm.AgentBasedModel;
 import simudyne.core.annotations.Variable;
 
 import java.util.ArrayList;
@@ -14,15 +15,18 @@ public class Portfolio {
 
     List<CDS> hedgingList;
 
+    Trader owner;
+
     @Variable
     public double cvaPercent;
 
     @Variable
     public double totalValue;
 
-    public Portfolio() {
+    public Portfolio(Trader owner) {
         derivativeList = new ArrayList<>();
         hedgingList = new ArrayList<>();
+        this.owner = owner;
     }
 
 
@@ -42,7 +46,7 @@ public class Portfolio {
         hedgingList.add(cds);
     }
 
-    public double updateCva(long currentTick, double timeStep, double hazardRate, double recoveryRate, double meanRev, double equilibrium, double volatility, double swapRate, RandomGenerator generator) {
+    public double updateCva(long currentTick, double timeStep, double hazardRate, double recoveryRate, double meanRev, double volatility, double stockPrice, RandomGenerator generator) {
         // find the longest time in the portfolio
         if (derivativeIsEmpty()) {
             cvaPercent = 0;
@@ -51,7 +55,7 @@ public class Portfolio {
             double cvaSum = 0;
             for (Derivative derivative : derivativeList) {
                 if (derivative.endTick >= currentTick) {
-                    derivative.calculateExpectedExposure(derivative.endTick - currentTick, timeStep, 0.05, meanRev, equilibrium, volatility, swapRate, generator);
+                    derivative.calculateExpectedExposure(derivative.endTick - currentTick, timeStep, stockPrice, meanRev, volatility, generator, owner);
                     for (long i = 0; i < last - currentTick; i++) {
 
                         double expectedExposure = derivative.getExpectedExposure(i, timeStep);
@@ -74,6 +78,7 @@ public class Portfolio {
     }
 
     public void closeTrades(long currentTick) {
+        System.out.println(derivativeList);
         for (Derivative derivative : derivativeList) {
             if (derivative.endTick == currentTick) {
                 if (derivative instanceof Forward) {
@@ -81,7 +86,8 @@ public class Portfolio {
                     Trader floating = forward.floating;
                     Trader fixed = forward.fixed;
                     double valueChange = forward.agreedValue * forward.amountOfAsset;
-
+                    System.out.println(fixed.getID());
+                    System.out.println(floating.getID());
                     floating.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = valueChange).to(fixed.getID());
                     fixed.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = -valueChange).to(floating.getID());
 

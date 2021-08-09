@@ -44,7 +44,7 @@ public class MomentumInstitution extends Trader {
         return action(
                 institution -> {
                     institution.portfolio.closeTrades(currentTick);
-                    institution.updateCva(currentTick);
+                    institution.updateCva(currentTick,institution.getMessageOfType(Messages.UpdateFields.class).price);
                     institution.historicalPrices.put(institution.getContext().getTick(), institution.getMessageOfType(Messages.UpdateFields.class).price);
                 });
     }
@@ -67,7 +67,7 @@ public class MomentumInstitution extends Trader {
     @Override
     public void init() {
         super.init();
-        portfolio = new Portfolio();
+        portfolio = new Portfolio(this);
         totalValue = 1500;
         numberOfAssets = 10;
     }

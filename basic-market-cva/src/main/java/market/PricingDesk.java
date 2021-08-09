@@ -23,6 +23,7 @@ public class PricingDesk extends Trader {
         bankAsset = new BankAsset();
         totalValue = 1500;
         numberOfAssets = 100;
+        portfolio = new Portfolio(this);
     }
 
     private static Action<PricingDesk> action(SerializableConsumer<PricingDesk> consumer) {
@@ -42,7 +43,7 @@ public class PricingDesk extends Trader {
                 addForward(pricingDesk, pricingDesk, inst);
             }
 
-            pricingDesk.updateCva(pricingDesk.getContext().getTick());
+            pricingDesk.updateCva(pricingDesk.getContext().getTick(), pricingDesk.price);
             // todo: change this so it is fueled by the market demand
             double priceChange = pricingDesk.getPrng().generator.nextGaussian();
             pricingDesk.price = pricingDesk.bankAsset.updatePrice(priceChange);

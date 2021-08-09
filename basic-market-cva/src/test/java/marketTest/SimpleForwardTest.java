@@ -124,8 +124,11 @@ public class SimpleForwardTest {
         }
 
         @Override
-        public void calculateExpectedExposure(long duration, double timeStep, double interestRate, double meanRev, double equilibrium, double volatility, double swapRate, RandomGenerator generator) {
+        public void calculateExpectedExposure(long duration, double timeStep, double stockPrice, double meanRev, double volatility, RandomGenerator generator, Trader trader) {
 
         }
+
+
+
     }
 }

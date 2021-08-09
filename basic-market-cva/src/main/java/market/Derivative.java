@@ -47,7 +47,6 @@ public abstract class Derivative {
 
     protected void calculateCntptySurvives(long atTick, double riskPercent, double timeStep) {
 
-        //System.out.println("HELLO");
         if (atTick == (long) 1) {
             counterPartySurvives.put(atTick * timeStep, 1.00);
            // System.out.println(counterPartySurvives.get(0.0));
@@ -59,6 +58,6 @@ public abstract class Derivative {
 
     protected abstract void calculateStartingValue(double timeStep);
 
-    public abstract void calculateExpectedExposure(long duration, double timeStep, double interestRate, double meanRev, double equilibrium, double volatility, double swapRate, RandomGenerator generator);
+    public abstract void calculateExpectedExposure (long duration, double timeStep, double stockPrice, double meanRev, double volatility,RandomGenerator generator, Trader trader);
 
 }

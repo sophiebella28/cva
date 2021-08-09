@@ -33,7 +33,7 @@ public class Institution extends Trader {
     public static Action<Institution> updateFields(long currentTick) {
         return action(institution -> {
             institution.portfolio.closeTrades(currentTick);
-            institution.updateCva(currentTick);
+            institution.updateCva(currentTick, institution.getMessageOfType(Messages.UpdateFields.class).price);
             double updateFrequency = 0.01; // todo: make this global
             if (institution.random.nextDouble() <= updateFrequency) {
                 institution.tradingThresh =
@@ -56,7 +56,7 @@ public class Institution extends Trader {
     @Override
     public void init() {
         super.init();
-        portfolio = new Portfolio();
+        portfolio = new Portfolio(this);
         random = this.getPrng().generator;
         totalValue = 1500;
         numberOfAssets = 10;

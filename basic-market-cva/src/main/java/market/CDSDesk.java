@@ -7,7 +7,8 @@ import simudyne.core.functions.SerializableConsumer;
 
 public class CDSDesk extends Agent<MarketModel.Globals> {
 
-    public Portfolio portfolio = new Portfolio();
+    //public Portfolio portfolio = new Portfolio();
+    // im so tired im gonna fix this tomorrow
     @Variable
     public double totalValue;
 

@@ -33,28 +33,18 @@ public class Forward extends Derivative {
     }
 
     @Override
-    public void calculateExpectedExposure(long duration, double timeStep, double interestRate, double meanRev, double equilibrium, double volatility, double swapRate, RandomGenerator generator) {
+    public void calculateExpectedExposure(long duration, double timeStep, double stockPrice, double meanRev, double volatility,RandomGenerator generator, Trader trader) {
 
         for (int i = 0; i < 250; i++) {
             // todo: consider taking an uneven sample of time points
-            double sampleInterest = interestRate;
+            double sampleStockPrice = stockPrice;
             for (int j = 0; j < duration; j++) {
-                sampleInterest = sampleInterest + meanRev * (equilibrium - sampleInterest) * timeStep + generator.nextGaussian() * Math.sqrt(timeStep) * volatility;
-                double total = 0.0;
-                double finalDiscount = 0.0;
-                for (int k = 1; k <= (duration - j); k++) {
-                    double B = (1 - Math.exp(-meanRev * k * timeStep)) / meanRev;
-                    //todo: dont need to recalculate A and B every time -- FIX
-                    double A = Math.exp(((B - k * timeStep) * (Math.pow(meanRev, 2) * equilibrium - Math.pow(volatility, 2) / 2)) / Math.pow(meanRev, 2) - (Math.pow(volatility, 2) * Math.pow(B, 2) / (4 * meanRev)));
-                    double discount = A * Math.exp(-B * sampleInterest);
-                    total += discount;
-                    if (k == (duration - j )) {
-                        finalDiscount = discount;
-                    }
-                }
-                double fixedLeg = swapRate * total * 0.25;
-                double floatingLeg = 1 - finalDiscount;
-                double mtm = fixedLeg - floatingLeg;
+                double stockChange = timeStep * meanRev * sampleStockPrice + volatility * Math.sqrt(timeStep) * sampleStockPrice * generator.nextGaussian();
+                sampleStockPrice += stockChange;
+
+                double fixedLeg = agreedValue;
+                double floatingLeg = sampleStockPrice;
+                double mtm = (trader == floating) ? fixedLeg - floatingLeg : floatingLeg - fixedLeg;
                 if (mtm > 0) {
                     double prevExposure = expectedExposure.getOrDefault(j * timeStep, 0.0);
                     expectedExposure.put(j * timeStep, prevExposure + mtm / 250);
