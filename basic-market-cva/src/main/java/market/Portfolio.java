@@ -55,7 +55,7 @@ public class Portfolio {
             double cvaSum = 0;
             for (Derivative derivative : derivativeList) {
                 if (derivative.endTick >= currentTick) {
-                    derivative.calculateExpectedExposure(derivative.endTick - currentTick, timeStep, stockPrice, meanRev, volatility, generator, owner);
+                    derivative.calculateExpectedExposure(derivative.endTick - currentTick, timeStep, stockPrice, generator, owner);
                     for (long i = 0; i < last - currentTick; i++) {
 
                         double expectedExposure = derivative.getExpectedExposure(i, timeStep);
@@ -78,7 +78,7 @@ public class Portfolio {
     }
 
     public void closeTrades(long currentTick) {
-        System.out.println(derivativeList);
+
         for (Derivative derivative : derivativeList) {
             if (derivative.endTick == currentTick) {
                 if (derivative instanceof Forward) {
@@ -86,13 +86,11 @@ public class Portfolio {
                     Trader floating = forward.floating;
                     Trader fixed = forward.fixed;
                     double valueChange = forward.agreedValue * forward.amountOfAsset;
-                    System.out.println(fixed.getID());
-                    System.out.println(floating.getID());
-                    floating.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = valueChange).to(fixed.getID());
-                    fixed.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = -valueChange).to(floating.getID());
+                    owner.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = valueChange).to(fixed.getID());
+                    owner.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = -valueChange).to(floating.getID());
 
-                    floating.send(Messages.ChangeAssets.class, (msg) -> msg.noOfAssets = -forward.amountOfAsset).to(fixed.getID());
-                    fixed.send(Messages.ChangeAssets.class, (msg) -> msg.noOfAssets = forward.amountOfAsset).to(floating.getID());
+                    owner.send(Messages.ChangeAssets.class, (msg) -> msg.noOfAssets = -forward.amountOfAsset).to(fixed.getID());
+                    owner.send(Messages.ChangeAssets.class, (msg) -> msg.noOfAssets = forward.amountOfAsset).to(floating.getID());
 
                     totalValue += forward.amountOfAsset * (forward.agreedValue - forward.assetType.getPrice());
                     // need a measure of whether or not this was actually lost idk

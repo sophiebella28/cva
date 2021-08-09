@@ -49,7 +49,7 @@ public abstract class Derivative {
 
         if (atTick == (long) 1) {
             counterPartySurvives.put(atTick * timeStep, 1.00);
-           // System.out.println(counterPartySurvives.get(0.0));
+            // System.out.println(counterPartySurvives.get(0.0));
         } else if (counterPartySurvives.get(atTick * timeStep) == null) {
             //System.out.println(atTick * timeStep);
             counterPartySurvives.put(atTick * timeStep, getPrevCounterParty(atTick, timeStep) * Math.exp(-(timeStep) * riskPercent));
@@ -58,6 +58,6 @@ public abstract class Derivative {
 
     protected abstract void calculateStartingValue(double timeStep);
 
-    public abstract void calculateExpectedExposure (long duration, double timeStep, double stockPrice, double meanRev, double volatility,RandomGenerator generator, Trader trader);
+    public abstract void calculateExpectedExposure(long duration, double timeStep, double stockPrice, RandomGenerator generator, Trader trader);
 
 }

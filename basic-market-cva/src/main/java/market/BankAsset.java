@@ -7,7 +7,7 @@ import simudyne.core.annotations.Variable;
 public class BankAsset implements AssetType{
 
     @Variable
-    double price = 4.0;
+    double price = 9.9;
 
     @Override
     public double getPrice() {

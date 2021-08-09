@@ -14,7 +14,7 @@ public class PricingDesk extends Trader {
     AssetType bankAsset;
 
     @Variable
-    double price = 4.0;
+    double price = 9.9;
 
 
     @Override
@@ -54,7 +54,8 @@ public class PricingDesk extends Trader {
 
     private static void addForward(PricingDesk pricingDesk, Trader floating, Trader fixed) {
         long startTick = pricingDesk.getContext().getTick();
-        long endTick = startTick + (Math.abs(pricingDesk.getPrng().generator.nextInt(10)));
+        long endTick = startTick + (Math.abs(pricingDesk.getPrng().generator.nextInt(10)) + 3);
+
         // for now only buying one of each asset but might change that
         // changing would involve adding an int to the message so each trader could have strategy
         Forward forwardToAdd = new Forward(fixed, floating, startTick, endTick, 0.05, pricingDesk.bankAsset, 1, pricingDesk.getGlobals().timeStep);

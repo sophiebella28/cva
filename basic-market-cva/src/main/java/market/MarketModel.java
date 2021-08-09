@@ -32,13 +32,13 @@ public class MarketModel extends AgentBasedModel<MarketModel.Globals> {
         public double timeStep = 0.25;
 
         @Input(name = "Mean Reversion")
-        public double meanRev = 14.8;
+        public double meanRev = 9.9;
 
         @Input(name = "Equilibrium")
         public double equilibrium = 0.05;
 
         @Input(name = "Volatility for cva calculation")
-        public double volatility = 9.9;
+        public double volatility =14.8;
 
         @Input(name = "Swap rate")
         public double swapRate = 0.05;
