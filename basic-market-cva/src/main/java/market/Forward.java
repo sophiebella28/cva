@@ -1,6 +1,7 @@
 package market;
 
 import org.apache.commons.math3.random.RandomGenerator;
+import simudyne.core.abm.Agent;
 
 import java.util.HashMap;
 
@@ -33,20 +34,17 @@ public class Forward extends Derivative {
     }
 
     @Override
-    public void calculateExpectedExposure(long duration, double timeStep, double stockPrice,RandomGenerator generator, Trader trader) {
+    public void calculateExpectedExposure(long duration, double timeStep, double stockPrice,RandomGenerator generator, Agent<Globals> trader) {
         // data gathered from historical apple stock prices for the last 14 years
 
         double mu = 0.33 * timeStep;
-        System.out.println("mu is " + mu);
         double sigma = Math.sqrt(Math.pow(0.323,2) * timeStep);
-        System.out.println("sigma is " + sigma);
         for (int i = 0; i < 250; i++) {
             // todo: consider taking an uneven sample of time points
             double sampleStockPrice = stockPrice;
             for (int j = 0; j < duration; j++) {
                 double stockChange = timeStep * mu * sampleStockPrice + sigma * Math.sqrt(timeStep) * sampleStockPrice * generator.nextGaussian();
 
-                //System.out.println(stockChange);
                 sampleStockPrice += stockChange;
 
                 double fixedLeg = agreedValue;
@@ -62,8 +60,6 @@ public class Forward extends Derivative {
 
 
         }
-
-        System.out.println("expected exposure at 2 ticks is " + expectedExposure.get( 2 * timeStep) );
     }
 
 

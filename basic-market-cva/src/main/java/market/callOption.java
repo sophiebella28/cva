@@ -1,6 +1,7 @@
 package market;
 
 import org.apache.commons.math3.random.RandomGenerator;
+import simudyne.core.abm.Agent;
 
 public class callOption extends Derivative {
     public callOption(long startTick, long endTick, double discountFactor) {
@@ -13,7 +14,7 @@ public class callOption extends Derivative {
     }
 
     @Override
-    public void calculateExpectedExposure(long duration, double timeStep, double stockPrice, RandomGenerator generator, Trader trader) {
+    public void calculateExpectedExposure(long duration, double timeStep, double stockPrice, RandomGenerator generator, Agent<Globals> owner) {
 
     }
 

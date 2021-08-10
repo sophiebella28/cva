@@ -5,9 +5,9 @@ import simudyne.core.abm.Agent;
 import simudyne.core.annotations.Variable;
 import simudyne.core.functions.SerializableConsumer;
 
-public class CDSDesk extends Agent<MarketModel.Globals> {
+public class CDSDesk extends Agent<Globals> {
 
-    //public Portfolio portfolio = new Portfolio();
+    public Portfolio portfolio = new Portfolio(this);
     // im so tired im gonna fix this tomorrow
     @Variable
     public double totalValue;

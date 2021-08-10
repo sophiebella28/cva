@@ -5,51 +5,39 @@ import simudyne.core.abm.Action;
 import simudyne.core.annotations.Variable;
 import simudyne.core.functions.SerializableConsumer;
 
-public class Institution extends Trader {
+public class Institution extends InstitutionBase {
     RandomGenerator random;
     @Variable
     double tradingThresh;
+
 
 
     private static Action<Institution> action(SerializableConsumer<Institution> consumer) {
         return Action.create(Institution.class, consumer);
     }
 
-    public static Action<Institution> sendTrades() {
-        return action(institution -> {
-            double informationSignal = institution.getGlobals().informationSignal;
-            if (Math.abs(informationSignal) > institution.tradingThresh) {
+
+    @Override
+    public void buyOrSell() {
+            double informationSignal = getGlobals().informationSignal;
+            if (Math.abs(informationSignal) > tradingThresh) {
                 if (informationSignal > 0) {
-                    institution.buy();
+                    buy();
                 } else {
-                    institution.sell();
+                    sell();
                 }
             }
-
-        });
     }
 
 
-    public static Action<Institution> updateFields(long currentTick) {
-        return action(institution -> {
-            institution.portfolio.closeTrades(currentTick);
-            institution.updateCva(currentTick, institution.getMessageOfType(Messages.UpdateFields.class).price);
-            double updateFrequency = 0.01; // todo: make this global
-            if (institution.random.nextDouble() <= updateFrequency) {
-                institution.tradingThresh =
-                        institution.getMessageOfType(Messages.UpdateFields.class).priceChange;
-            }
-        });
-    }
 
-    public static Action<Institution> getValueChanges(long currentTick) {
-        return action(
-                institution -> {
-                    double totalValueChange = institution.getMessagesOfType(Messages.ChangeValue.class).stream().map(link -> link.valueChange).reduce(0.0, Double::sum);
-                    int totalAssetChange = institution.getMessagesOfType(Messages.ChangeAssets.class).stream().map(link -> link.noOfAssets).reduce(0, Integer::sum);
-                    institution.totalValue += totalValueChange;
-                    institution.numberOfAssets += totalAssetChange;
-                });
+    @Override
+    void updateInfo() {
+        double updateFrequency = 0.01; // todo: make this global
+        if (random.nextDouble() <= updateFrequency) {
+            tradingThresh =
+                    getMessageOfType(Messages.UpdateFields.class).priceChange;
+        }
     }
 
 
@@ -62,6 +50,5 @@ public class Institution extends Trader {
         numberOfAssets = 10;
         tradingThresh = random.nextGaussian();
     }
-
 
 }

@@ -5,26 +5,27 @@ import market.*;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.Before;
 import org.junit.Test;
+import simudyne.core.abm.Agent;
 import simudyne.core.abm.testkit.TestKit;
 import simudyne.core.abm.testkit.TestResult;
 
 import static org.junit.Assert.assertEquals;
 
 public class SimpleForwardTest {
-    private TestKit<MarketModel.Globals> testKit;
+    private TestKit<Globals> testKit;
     private Institution institution;
-    private PricingDesk pricingDesk;
+    private PricingDesk PricingDesk;
     public static final int TARGET_LINK_ID = 1;
 
     @Before
     public void init() {
-        testKit = TestKit.create(MarketModel.Globals.class);
+        testKit = TestKit.create(Globals.class);
         testKit.registerLinkTypes(Links.MarketLink.class);
         institution = testKit.addAgent(Institution.class);
-        pricingDesk = testKit.addAgent(PricingDesk.class);
+        PricingDesk = testKit.addAgent(PricingDesk.class);
 
         institution.addLink(TARGET_LINK_ID, Links.MarketLink.class);
-        institution.addDerivativeToPortfolio(new TestForward(pricingDesk,institution,0, 60, 0.05, new BankAsset()));
+        institution.addDerivativeToPortfolio(new TestForward(PricingDesk,institution,0, 60, 0.05, new BankAsset()));
     }
 
     @Test
@@ -124,7 +125,7 @@ public class SimpleForwardTest {
         }
 
         @Override
-        public void calculateExpectedExposure(long duration, double timeStep, double stockPrice, RandomGenerator generator, Trader trader) {
+        public void calculateExpectedExposure(long duration, double timeStep, double stockPrice, RandomGenerator generator, Agent<Globals> owner) {
 
         }
 

@@ -1,6 +1,7 @@
 package market;
 
 import org.apache.commons.math3.random.RandomGenerator;
+import simudyne.core.abm.Agent;
 
 import java.util.HashMap;
 
@@ -58,6 +59,6 @@ public abstract class Derivative {
 
     protected abstract void calculateStartingValue(double timeStep);
 
-    public abstract void calculateExpectedExposure(long duration, double timeStep, double stockPrice, RandomGenerator generator, Trader trader);
+    public abstract void calculateExpectedExposure(long duration, double timeStep, double stockPrice, RandomGenerator generator, Agent<Globals> owner);
 
 }
