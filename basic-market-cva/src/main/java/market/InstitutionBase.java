@@ -10,13 +10,22 @@ public abstract class InstitutionBase extends Trader {
     }
 
     protected void sell() {
-        getLinks(Links.MarketLink.class).send(Messages.ForwardFixedTrade.class, (msg, link) -> msg.from = this);
+        if( getPrng().generator.nextBoolean()) {
+            getLinks(Links.MarketLink.class).send(Messages.ForwardFixedTrade.class, (msg, link) -> msg.from = this);
+        } else {
+            getLinks(Links.MarketLink.class).send(Messages.CallOptionSellTrade.class, (msg, link) -> msg.from = this);
+        }
 
 
     }
 
     protected void buy() {
-        getLinks(Links.MarketLink.class).send(Messages.ForwardFloatingTrade.class, (msg, link) -> msg.from = this);
+        if( getPrng().generator.nextBoolean()) {
+            getLinks(Links.MarketLink.class).send(Messages.ForwardFloatingTrade.class, (msg, link) -> msg.from = this);
+        } else {
+            getLinks(Links.MarketLink.class).send(Messages.CallOptionBuyTrade.class, (msg, link) -> msg.from = this);
+        }
+
     }
 
     public static Action<InstitutionBase> sendTrades() {

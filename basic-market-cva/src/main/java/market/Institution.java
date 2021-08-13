@@ -44,9 +44,9 @@ public class Institution extends InstitutionBase {
     @Override
     public void init() {
         super.init();
-        portfolio = new Portfolio(this);
+        portfolio = new Portfolio();
         random = this.getPrng().generator;
-        totalValue = 1500;
+        totalMoney = 1500;
         numberOfAssets = 10;
         tradingThresh = random.nextGaussian();
     }

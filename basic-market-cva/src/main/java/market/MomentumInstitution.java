@@ -45,8 +45,8 @@ public class MomentumInstitution extends InstitutionBase {
     @Override
     public void init() {
         super.init();
-        portfolio = new Portfolio(this);
-        totalValue = 1500;
+        portfolio = new Portfolio();
+        totalMoney = 1500;
         numberOfAssets = 10;
     }
 

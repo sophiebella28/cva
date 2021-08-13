@@ -1,13 +1,6 @@
 package market;
 
-import org.apache.commons.math3.random.RandomGenerator;
-import simudyne.core.abm.Agent;
-import simudyne.core.abm.AgentBasedModel;
-import simudyne.core.annotations.Variable;
-
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class Portfolio {
@@ -16,7 +9,7 @@ public class Portfolio {
 
     List<CDS> hedgingList;
 
-    
+
     public Portfolio() {
         derivativeList = new ArrayList<>();
         hedgingList = new ArrayList<>();
@@ -38,7 +31,6 @@ public class Portfolio {
     public void add(CDS cds) {
         hedgingList.add(cds);
     }
-
 
 
 

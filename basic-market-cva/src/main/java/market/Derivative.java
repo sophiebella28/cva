@@ -57,8 +57,10 @@ public abstract class Derivative {
         }
     }
 
-    protected abstract void calculateStartingValue(double timeStep);
+    protected abstract void calculateStartingValue(double stockPrice);
 
-    public abstract void calculateExpectedExposure(long duration, double timeStep, double stockPrice, RandomGenerator generator, Agent<Globals> owner);
+    public abstract void calculateExpectedExposure(long duration, double stockPrice, RandomGenerator generator, Agent<Globals> trader, Globals globals);
+
+    public abstract double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility);
 
 }

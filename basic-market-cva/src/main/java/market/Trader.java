@@ -14,9 +14,12 @@ public abstract class Trader extends Agent<Globals> {
     public Portfolio portfolio;
 
     @Variable
-    public double totalValue;
+    public double totalMoney;
     @Variable
     public double numberOfAssets;
+
+    @Variable
+    public double totalValue;
 
     @Variable
     public double cvaPercent;
@@ -26,6 +29,14 @@ public abstract class Trader extends Agent<Globals> {
     }
     public void addDerivativeToPortfolio(Derivative derivative) {
         portfolio.add(derivative);
+    }
+
+    public double calculatePortfolioValue() {
+        double total = 0.0;
+        for (Derivative derivative : portfolio.derivativeList) {
+            total += derivative.getCurrentValue(getContext().getTick(),getGlobals().timeStep,0.05,getGlobals().volatility);
+        }
+        return total;
     }
 
     void updateCva(long currentTick, double stockPrice) {
@@ -43,7 +54,7 @@ public abstract class Trader extends Agent<Globals> {
             double cvaSum = 0;
             for (Derivative derivative : derivativeList) {
                 if (derivative.endTick >= currentTick) {
-                    derivative.calculateExpectedExposure(derivative.endTick - currentTick, timeStep, stockPrice, generator, this);
+                    derivative.calculateExpectedExposure(derivative.endTick - currentTick,  stockPrice, generator, this, getGlobals());
                     for (long i = 0; i < last - currentTick; i++) {
 
                         double expectedExposure = derivative.getExpectedExposure(i, timeStep);
@@ -66,17 +77,17 @@ public abstract class Trader extends Agent<Globals> {
     }
 
     public static Action<Trader> updateFields(long currentTick) {
-        // there is going to be an issue that the pricing desk isnt being sent a message itself
         return action(
                 trader -> {
                     trader.updateCva(currentTick,trader.getMessageOfType(Messages.UpdateFields.class).price);
                     double totalValueChange = trader.getMessagesOfType(Messages.ChangeValue.class).stream().map(link -> link.valueChange).reduce(0.0, Double::sum);
                     int totalAssetChange = trader.getMessagesOfType(Messages.ChangeAssets.class).stream().map(link -> link.noOfAssets).reduce(0, Integer::sum);
-                    trader.totalValue += totalValueChange;
+                    trader.totalMoney += totalValueChange;
                     trader.numberOfAssets += totalAssetChange;
                     if (trader instanceof InstitutionBase) {
                          ((InstitutionBase) trader).updateInfo();
                     }
+                    trader.totalValue = trader.calculatePortfolioValue();
                 });
     }
 

@@ -21,24 +21,21 @@ public class Forward extends Derivative {
         this.floating = floating;
         this.assetType = assetType;
         this.amountOfAsset = amountOfAsset;
-        calculateStartingValue(timeStep);
+        calculateStartingValue(assetType.getPrice());
     }
 
-    @Override
-    protected void calculateStartingValue(double timeStep) {
-        agreedValue = assetType.getPrice() * Math.exp(discountFactor * (endTick - startTick) * timeStep);
-    }
+
 
     public double getAgreedValue() {
         return agreedValue;
     }
 
     @Override
-    public void calculateExpectedExposure(long duration, double timeStep, double stockPrice,RandomGenerator generator, Agent<Globals> trader) {
+    public void calculateExpectedExposure(long duration, double stockPrice, RandomGenerator generator, Agent<Globals> trader, Globals globals) {
         // data gathered from historical apple stock prices for the last 14 years
-
-        double mu = 0.33 * timeStep;
-        double sigma = Math.sqrt(Math.pow(0.323,2) * timeStep);
+        double timeStep = globals.timeStep;
+        double mu = globals.mean;
+        double sigma = globals.volatility;
         for (int i = 0; i < 250; i++) {
             // todo: consider taking an uneven sample of time points
             double sampleStockPrice = stockPrice;
@@ -56,17 +53,24 @@ public class Forward extends Derivative {
                 }
 
             }
-
-
-
         }
     }
 
-
+    @Override
+    public double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility) {
+        double stockPrice = assetType.getPrice();
+        double f = stockPrice - agreedValue * Math.exp(-interestRate * (endTick - currentTick * timeStep));
+        return f * agreedValue;
+    }
 
 
     @Override
     protected double getExpectedExposure(long atTick, double timeStep) {
         return expectedExposure.getOrDefault(atTick * timeStep, 0.0);
+    }
+
+    @Override
+    protected void calculateStartingValue(double stockPrice) {
+        agreedValue = stockPrice;
     }
 }

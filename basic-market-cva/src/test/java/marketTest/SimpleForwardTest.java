@@ -34,7 +34,7 @@ public class SimpleForwardTest {
 
         TestResult testResult = testKit.testAction(institution,Institution.updateFields(0));
 
-        assertEquals(0.00085, institution.portfolio.cvaPercent, 0.00001);
+        assertEquals(0.00085, institution.cvaPercent, 0.00001);
     }
 
     public static class TestForward extends Derivative {
@@ -125,9 +125,16 @@ public class SimpleForwardTest {
         }
 
         @Override
-        public void calculateExpectedExposure(long duration, double timeStep, double stockPrice, RandomGenerator generator, Agent<Globals> owner) {
+        public void calculateExpectedExposure(long duration, double stockPrice, RandomGenerator generator, Agent<Globals> trader, Globals globals) {
 
         }
+
+        @Override
+        public double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility) {
+            return 0;
+        }
+
+
 
 
     }

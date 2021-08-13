@@ -7,8 +7,7 @@ import simudyne.core.functions.SerializableConsumer;
 
 public class CDSDesk extends Agent<Globals> {
 
-    public Portfolio portfolio = new Portfolio(this);
-    // im so tired im gonna fix this tomorrow
+    public Portfolio portfolio = new Portfolio();
     @Variable
     public double totalValue;
 

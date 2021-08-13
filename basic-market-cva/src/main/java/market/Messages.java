@@ -11,6 +11,14 @@ public class Messages {
     public Trader from;
   }
 
+  public static class CallOptionSellTrade extends Message {
+    public Trader from;
+  }
+
+  public static class CallOptionBuyTrade extends Message {
+    public Trader from;
+  }
+
   public static class ChangeAssets extends Message {
     public int noOfAssets;
   }
