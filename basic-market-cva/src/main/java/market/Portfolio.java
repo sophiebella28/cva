@@ -32,6 +32,10 @@ public class Portfolio {
         hedgingList.add(cds);
     }
 
+    public void add(List<CDS> cdss) {
+        hedgingList.addAll(cdss);
+    }
+
 
 
 }

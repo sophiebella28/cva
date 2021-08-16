@@ -31,4 +31,8 @@ public class Messages {
     public double price;
     public double priceChange;
   }
+
+  public static class BuyCDS extends Message {
+    public CDS tobuy;
+  }
 }

@@ -130,12 +130,9 @@ public class SimpleForwardTest {
         }
 
         @Override
-        public double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility) {
+        public double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility, Trader owner) {
             return 0;
         }
-
-
-
 
     }
 }

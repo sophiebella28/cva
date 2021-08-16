@@ -57,10 +57,10 @@ public class Forward extends Derivative {
     }
 
     @Override
-    public double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility) {
+    public double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility, Trader owner) {
         double stockPrice = assetType.getPrice();
         double f = stockPrice - agreedValue * Math.exp(-interestRate * (endTick - currentTick * timeStep));
-        return f * agreedValue;
+        return (owner == floating) ? f * agreedValue : -f * agreedValue;
     }
 
 

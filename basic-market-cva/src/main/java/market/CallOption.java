@@ -58,14 +58,14 @@ public class CallOption extends Derivative {
     }
 
     @Override
-    public double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility) {
+    public double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility, Trader owner) {
         double stockPrice = assetType.getPrice();
         double sigmaRootT = stockVolatility * Math.sqrt(currentTick * timeStep);
         double d1 = (Math.log(stockPrice/agreedValue) + (interestRate + Math.pow(stockVolatility,2)/2) * (currentTick * timeStep))/ (sigmaRootT);
         double d2 = d1 - sigmaRootT;
         NormalDistribution normal = new NormalDistribution();
         double c = stockPrice * normal.cumulativeProbability(d1) - agreedValue * Math.exp(-interestRate * (currentTick * timeStep)) * normal.cumulativeProbability(d2);
-        return c * amountOfAsset;
+        return (owner == buyer) ? c * amountOfAsset : -c * amountOfAsset;
     }
 
     @Override

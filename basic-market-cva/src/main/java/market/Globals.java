@@ -27,13 +27,7 @@ public class Globals extends GlobalState {
 
     public double mean = 0.33 * timeStep;
 
-    @Input(name = "Equilibrium")
-    public double equilibrium = 0.05;
-
     public double volatility = Math.sqrt(Math.pow(0.323,2) * timeStep);
-
-    @Input(name = "Swap rate")
-    public double swapRate = 0.05;
 
     @Input(name = "Volatility of Information Signal")
     public double volatilityInfo = 0.001;
@@ -50,4 +44,7 @@ public class Globals extends GlobalState {
     public double traderActivity = 0.1;
 
     public double time = 0;
+
+    @Input(name = "Interest Rate On CDS")
+    public double cdsInterestRate = 0.01;
 }

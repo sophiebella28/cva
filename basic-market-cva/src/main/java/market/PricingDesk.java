@@ -44,11 +44,11 @@ public class PricingDesk extends Trader {
             List<Trader> buyerList = pricingDesk.getMessagesOfType(Messages.CallOptionBuyTrade.class).stream().map(link -> link.from).collect(Collectors.toList());
             List<Trader> sellerList = pricingDesk.getMessagesOfType(Messages.CallOptionSellTrade.class).stream().map(link -> link.from).collect(Collectors.toList());
             for (Trader inst : buyerList) {
-                addForward(pricingDesk, inst, pricingDesk);
+                addCallOption(pricingDesk, inst, pricingDesk);
             }
 
             for (Trader inst : sellerList) {
-                addForward(pricingDesk, pricingDesk, inst);
+                addCallOption(pricingDesk, pricingDesk, inst);
             }
 
 
@@ -111,8 +111,14 @@ public class PricingDesk extends Trader {
                 }
             }
         }
-        // todo: figure out at which point the cds desk should close its trades - it should probably have its own method
-
+        for (CDS cds : portfolio.hedgingList) {
+            if(currentTick == cds.startTick || (currentTick - cds.startTick ) % 12 == 0 ) {
+                Trader trader = cds.buyer;
+                CDSDesk desk = cds.desk;
+                trader.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = -cds.yearly * cds.notional).to(desk.getID());
+                desk.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = cds.yearly * cds.notional).to(trader.getID());
+            }
+        }
     }
 
     private void sendValueChanges(Trader floating, Trader fixed, double agreedValue, int amountOfAsset, AssetType assetType) {
