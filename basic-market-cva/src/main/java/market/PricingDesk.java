@@ -1,9 +1,11 @@
 package market;
 
 import simudyne.core.abm.Action;
+import simudyne.core.abm.Agent;
 import simudyne.core.annotations.Variable;
 import simudyne.core.functions.SerializableConsumer;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,7 +21,7 @@ public class PricingDesk extends Trader {
     public void init() {
         super.init();
         bankAsset = new BankAsset();
-        totalMoney = 1500;
+        totalMoney = 0;
         numberOfAssets = 100;
         portfolio = new Portfolio();
     }
@@ -33,6 +35,9 @@ public class PricingDesk extends Trader {
 
             List<Trader> floatingList = pricingDesk.getMessagesOfType(Messages.ForwardFloatingTrade.class).stream().map(link -> link.from).collect(Collectors.toList());
             List<Trader> fixedList = pricingDesk.getMessagesOfType(Messages.ForwardFixedTrade.class).stream().map(link -> link.from).collect(Collectors.toList());
+
+            int buys = floatingList.size();
+            int sells = floatingList.size();
             for (Trader inst : floatingList) {
                 addForward(pricingDesk, inst, pricingDesk);
             }
@@ -43,6 +48,9 @@ public class PricingDesk extends Trader {
 
             List<Trader> buyerList = pricingDesk.getMessagesOfType(Messages.CallOptionBuyTrade.class).stream().map(link -> link.from).collect(Collectors.toList());
             List<Trader> sellerList = pricingDesk.getMessagesOfType(Messages.CallOptionSellTrade.class).stream().map(link -> link.from).collect(Collectors.toList());
+
+            buys += buyerList.size();
+            sells += sellerList.size();
             for (Trader inst : buyerList) {
                 addCallOption(pricingDesk, inst, pricingDesk);
             }
@@ -53,14 +61,25 @@ public class PricingDesk extends Trader {
 
 
             // todo: change this so it is fueled by the market demand
-            double priceChange = pricingDesk.getPrng().generator.nextGaussian();
+
+            int netDemand = buys - sells;
+
+            double priceChange = 0.0;
+            if (netDemand == 0) {
+                priceChange = 0.0;
+            } else {
+                long nbTraders = pricingDesk.getGlobals().nmInstitutions;
+                double lambda = pricingDesk.getGlobals().lambda;
+                priceChange = (netDemand / (double) nbTraders) / lambda;
+            }
             pricingDesk.price = pricingDesk.bankAsset.updatePrice(priceChange);
+            double finalPriceChange = priceChange;
             pricingDesk.send(Messages.UpdateFields.class, (msg) -> {
-                msg.priceChange = priceChange;
+                msg.priceChange = finalPriceChange;
                 msg.price = pricingDesk.price;
             }).to(pricingDesk.getID());
             pricingDesk.getLinks(Links.MarketLink.class).send(Messages.UpdateFields.class, (msg, link) -> {
-                msg.priceChange = priceChange;
+                msg.priceChange = finalPriceChange;
                 msg.price = pricingDesk.price;
             });
             pricingDesk.closeTrades(pricingDesk.getContext().getTick());
@@ -98,7 +117,9 @@ public class PricingDesk extends Trader {
                     Forward forward = (Forward) derivative;
                     Trader floating = forward.floating;
                     Trader fixed = forward.fixed;
-                    sendValueChanges(floating, fixed, forward.agreedValue, forward.amountOfAsset, forward.assetType);
+                    sendValueChanges(floating, fixed, forward.amountOfAsset, forward.agreedValue * forward.amountOfAsset);
+                    totalMoney += forward.amountOfAsset * (forward.agreedValue - forward.assetType.getPrice());
+
                     // need a measure of whether or not this was actually lost idk
                 }
                 if (derivative instanceof CallOption) {
@@ -106,29 +127,53 @@ public class PricingDesk extends Trader {
                     Trader buyer = option.buyer;
                     Trader seller = option.seller;
                     if (option.agreedValue < option.assetType.getPrice()) {
-                        sendValueChanges(buyer, seller, option.agreedValue, option.amountOfAsset, option.assetType);
+                        sendValueChanges(buyer, seller, option.amountOfAsset, option.agreedValue * option.amountOfAsset);
+                        totalMoney += option.amountOfAsset * (option.agreedValue - option.assetType.getPrice());
+
                     }
                 }
             }
         }
         for (CDS cds : portfolio.hedgingList) {
-            if(currentTick == cds.startTick || (currentTick - cds.startTick ) % 12 == 0 ) {
+            if (currentTick == cds.startTick || (currentTick - cds.startTick) % 12 == 0) {
                 Trader trader = cds.buyer;
                 CDSDesk desk = cds.desk;
-                trader.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = -cds.yearly * cds.notional).to(desk.getID());
-                desk.send(Messages.ChangeValue.class, (msg) -> msg.valueChange = cds.yearly * cds.notional).to(trader.getID());
+                sendValueChanges(trader, desk, 0, cds.yearly * cds.notional);
+
             }
         }
     }
 
-    private void sendValueChanges(Trader floating, Trader fixed, double agreedValue, int amountOfAsset, AssetType assetType) {
-        double valueChange = agreedValue * amountOfAsset;
+    private void sendValueChanges(Agent<Globals> floating, Agent<Globals> fixed, int amountOfAsset, double valueChange) {
+
         send(Messages.ChangeValue.class, (msg) -> msg.valueChange = valueChange).to(fixed.getID());
         send(Messages.ChangeValue.class, (msg) -> msg.valueChange = -valueChange).to(floating.getID());
 
         send(Messages.ChangeAssets.class, (msg) -> msg.noOfAssets = -amountOfAsset).to(fixed.getID());
         send(Messages.ChangeAssets.class, (msg) -> msg.noOfAssets = amountOfAsset).to(floating.getID());
 
-        totalMoney += amountOfAsset * (agreedValue - assetType.getPrice());
+    }
+
+    public static Action<PricingDesk> closeDefaultedTrades() {
+        return action(pricingDesk -> {
+            List<Trader> defaultedList = pricingDesk.getMessagesOfType(Messages.DefaultNotification.class).stream().map(link -> link.defaulted).collect(Collectors.toList());
+            List<Derivative> defaultedTrades = new ArrayList<>();
+            for (Derivative derivative : pricingDesk.portfolio.derivativeList) {
+                if (derivative instanceof Forward) {
+                    if (defaultedList.contains(((Forward) derivative).floating)) {
+                        pricingDesk.totalMoney += pricingDesk.getGlobals().recoveryRate * ((Forward) derivative).agreedValue; //todo: is this actually what they get??? i forgot oops
+                        defaultedTrades.add(derivative);
+                    }
+                } else if (derivative instanceof CallOption) {
+                    if (defaultedList.contains(((CallOption) derivative).buyer)) {
+                        pricingDesk.totalMoney += pricingDesk.getGlobals().recoveryRate * ((CallOption) derivative).agreedValue;
+                        defaultedTrades.add(derivative);
+                    }
+                }
+            }
+            pricingDesk.portfolio.derivativeList.removeAll(defaultedTrades);
+
+            pricingDesk.getLinks(Links.HedgingLink.class).send(Messages.DefaultList.class, (msg, link) -> msg.defaulted = defaultedList);
+        });
     }
 }

@@ -10,7 +10,7 @@ public abstract class InstitutionBase extends Trader {
     }
 
     protected void sell() {
-        if( getPrng().generator.nextBoolean()) {
+        if (getPrng().generator.nextBoolean()) {
             getLinks(Links.MarketLink.class).send(Messages.ForwardFixedTrade.class, (msg, link) -> msg.from = this);
         } else {
             getLinks(Links.MarketLink.class).send(Messages.CallOptionSellTrade.class, (msg, link) -> msg.from = this);
@@ -20,7 +20,7 @@ public abstract class InstitutionBase extends Trader {
     }
 
     protected void buy() {
-        if( getPrng().generator.nextBoolean()) {
+        if (getPrng().generator.nextBoolean()) {
             getLinks(Links.MarketLink.class).send(Messages.ForwardFloatingTrade.class, (msg, link) -> msg.from = this);
         } else {
             getLinks(Links.MarketLink.class).send(Messages.CallOptionBuyTrade.class, (msg, link) -> msg.from = this);
@@ -35,9 +35,23 @@ public abstract class InstitutionBase extends Trader {
 
     protected abstract void buyOrSell();
 
+    public static Action<InstitutionBase> checkDefault() {
+        return action(instBase -> {
+            if (instBase.totalMoney < 0) {
+                instBase.getLinks(Links.MarketLink.class).send(Messages.DefaultNotification.class, (msg, link) -> msg.defaulted = instBase);
+                instBase.totalMoney = 1500; // todo: add global variables
+                instBase.numberOfAssets = 10;
+            }
+        });
+    }
 
-
-
+    @Override
+    public void init() {
+        super.init();
+        totalMoney = 0;
+        numberOfAssets = 10;
+        portfolio = new Portfolio();
+    }
 
     abstract void updateInfo();
 }

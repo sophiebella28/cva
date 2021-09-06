@@ -2,6 +2,8 @@ package market;
 
 import simudyne.core.graph.Message;
 
+import java.util.List;
+
 public class Messages {
   public static class ForwardFloatingTrade extends Message {
     public Trader from;
@@ -35,4 +37,14 @@ public class Messages {
   public static class BuyCDS extends Message {
     public CDS tobuy;
   }
+
+  public static class DefaultNotification extends Message {
+    public InstitutionBase defaulted;
+  }
+
+  public static class DefaultList extends Message {
+    public List<Trader> defaulted;
+  }
+
+
 }

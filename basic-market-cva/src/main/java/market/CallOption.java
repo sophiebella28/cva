@@ -4,6 +4,7 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
 import simudyne.core.abm.Agent;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class CallOption extends Derivative {
@@ -14,7 +15,6 @@ public class CallOption extends Derivative {
     int amountOfAsset = 0;
     double agreedValue = 0;
 
-    HashMap<Double, Double> expectedExposure = new HashMap<>();
 
     public CallOption(long startTick, long endTick, double discountFactor, Trader buyer, Trader seller, int amountOfAsset, AssetType assetType) {
         super(startTick, endTick, discountFactor);
@@ -24,48 +24,32 @@ public class CallOption extends Derivative {
         this.assetType = assetType;
         calculateStartingValue(assetType.getPrice());
     }
+
     @Override
     protected void calculateStartingValue(double stockPrice) {
         agreedValue = stockPrice;
     }
 
+
     @Override
-    public void calculateExpectedExposure(long duration, double stockPrice, RandomGenerator generator, Agent<Globals> trader, Globals globals) {
+    protected double uniqueExposureCalculation(double price, Trader trader) {
         if (trader == buyer) {
-            double timeStep = globals.timeStep;
-            double mu = globals.mean;
-            double sigma = globals.volatility;
-            for (int i = 0; i < 250; i++) {
-                // todo: consider taking an uneven sample of time points
-                double sampleStockPrice = stockPrice;
-                for (int j = 0; j < duration; j++) {
-                    double stockChange = timeStep * mu * sampleStockPrice + sigma * Math.sqrt(timeStep) * sampleStockPrice * generator.nextGaussian();
-
-                    sampleStockPrice += stockChange;
-
-                    double fixedLeg = agreedValue;
-                    double floatingLeg = sampleStockPrice;
-                    double mtm = floatingLeg - fixedLeg;
-                    if (mtm > 0) {
-                        double prevExposure = expectedExposure.getOrDefault(j * timeStep, 0.0);
-                        expectedExposure.put(j * timeStep, prevExposure + mtm / 250);
-                    }
-
-                }
-            }
+            return price - agreedValue;
         }
-
+        return 0.0;
     }
 
     @Override
     public double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility, Trader owner) {
         double stockPrice = assetType.getPrice();
-        double sigmaRootT = stockVolatility * Math.sqrt(currentTick * timeStep);
-        double d1 = (Math.log(stockPrice/agreedValue) + (interestRate + Math.pow(stockVolatility,2)/2) * (currentTick * timeStep))/ (sigmaRootT);
+        double currentTime = (currentTick - startTick) * timeStep;
+        double sigmaRootT = stockVolatility * Math.sqrt(currentTime);
+        double d1 = (Math.log(stockPrice / agreedValue) + (interestRate + Math.pow(stockVolatility, 2) / 2) * currentTime) / (sigmaRootT);
         double d2 = d1 - sigmaRootT;
         NormalDistribution normal = new NormalDistribution();
-        double c = stockPrice * normal.cumulativeProbability(d1) - agreedValue * Math.exp(-interestRate * (currentTick * timeStep)) * normal.cumulativeProbability(d2);
-        return (owner == buyer) ? c * amountOfAsset : -c * amountOfAsset;
+        double c = stockPrice * normal.cumulativeProbability(d1) - agreedValue * Math.exp(-interestRate * currentTime) * normal.cumulativeProbability(d2);
+        //System.out.println(c);
+        return (owner == seller) ? c * amountOfAsset : -c * amountOfAsset;
     }
 
     @Override
@@ -73,5 +57,16 @@ public class CallOption extends Derivative {
         return expectedExposure.getOrDefault(atTick * timeStep, 0.0);
     }
 
+    @Override
+    protected Trader getCounterparty(Trader current) {
+        if (current == buyer) {
+            return seller;
+        }
+        return buyer;
+    }
 
+    @Override
+    public double getAgreedValue() {
+        return agreedValue;
+    }
 }

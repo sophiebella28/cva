@@ -1,7 +1,9 @@
 package market;
 
+import scala.collection.SeqExtractors;
 import simudyne.core.abm.AgentBasedModel;
 import simudyne.core.abm.Group;
+import simudyne.core.abm.Sequence;
 import simudyne.core.abm.Split;
 
 import java.util.Random;
@@ -11,7 +13,7 @@ import java.util.Random;
 public class MarketModel extends AgentBasedModel<Globals> {
     {
         registerAgentTypes(Institution.class, PricingDesk.class, MomentumInstitution.class, CDSDesk.class);
-        registerLinkTypes(Links.MarketLink.class);
+        registerLinkTypes(Links.MarketLink.class, Links.HedgingLink.class);
     }
 
     @Override
@@ -29,8 +31,12 @@ public class MarketModel extends AgentBasedModel<Globals> {
 
         priceGroup.fullyConnected(momInstitutionGroup, Links.MarketLink.class);
         priceGroup.fullyConnected(institutionGroup, Links.MarketLink.class);
+
+        priceGroup.fullyConnected(cdsGroup, Links.HedgingLink.class);
         cdsGroup.fullyConnected(momInstitutionGroup, Links.HedgingLink.class);
         cdsGroup.fullyConnected(institutionGroup, Links.HedgingLink.class);
+
+        cdsGroup.fullyConnected(priceGroup, Links.HedgingLink.class);
 
         super.setup();
     }
@@ -39,11 +45,15 @@ public class MarketModel extends AgentBasedModel<Globals> {
     public void step() {
         super.step();
 
-
         getGlobals().informationSignal = new Random().nextGaussian() * getGlobals().volatilityInfo;
 
-        run(Institution.sendTrades(), PricingDesk.calcPrices(),
-                Trader.updateFields(getContext().getTick()), CDSDesk.createHedges(), Trader.hedgeUpdates());
+        Sequence makeTradesAndHedges = Sequence.create(InstitutionBase.sendTrades(), PricingDesk.calcPrices(),
+                Split.create(Trader.updateFields(getContext().getTick()), CDSDesk.updateValues()), CDSDesk.createHedges());
+
+        Sequence checkDefault = Sequence.create(InstitutionBase.checkDefault(), PricingDesk.closeDefaultedTrades(), CDSDesk.evaluateCds(),Trader.cdsGains());
+
+        run(makeTradesAndHedges,checkDefault);
+
         getGlobals().time = getContext().getTick() * getGlobals().timeStep;
     }
 }

@@ -6,16 +6,16 @@ public class CDS {
     double notional;
     long startTick;
     public long endTick;
-    double upfront;
     double yearly;
+    Trader protectionOn;
 
-    public CDS(Trader buyer, long startTick, long endTick, double notional, double yearly) {
+    public CDS(Trader buyer, long startTick, long endTick, double notional, double yearly, Trader protectionOn) {
         this.buyer = buyer;
         this.startTick = startTick;
         this.endTick = endTick;
         this.notional = notional;
-        this.upfront = upfront;
         this.yearly = yearly;
+        this.protectionOn = protectionOn;
     }
 
     public void setDesk(CDSDesk desk) {

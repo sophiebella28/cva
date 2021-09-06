@@ -1,6 +1,7 @@
 package market;
 
 import simudyne.core.abm.Action;
+import simudyne.core.abm.messages.PoisonPill;
 import simudyne.core.annotations.Variable;
 import simudyne.core.functions.SerializableConsumer;
 
@@ -9,10 +10,8 @@ import java.util.Map;
 
 public class MomentumInstitution extends InstitutionBase {
 
-    @Variable(name = "Long Term Moving Average")
     public double longTermMovingAvg;
 
-    @Variable(name = "Short Term Moving Average")
     public double shortTermMovingAvg;
 
     public Map<Long, Double> historicalPrices = new HashMap<>();
@@ -46,8 +45,6 @@ public class MomentumInstitution extends InstitutionBase {
     public void init() {
         super.init();
         portfolio = new Portfolio();
-        totalMoney = 1500;
-        numberOfAssets = 10;
     }
 
     @Override

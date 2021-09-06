@@ -1,8 +1,8 @@
 package market;
 
 import org.apache.commons.math3.random.RandomGenerator;
-import simudyne.core.abm.Agent;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 public abstract class Derivative {
@@ -11,6 +11,7 @@ public abstract class Derivative {
     double discountFactor;
 
     HashMap<Double, Double> counterPartySurvives;
+    HashMap<Double, Double> expectedExposure = new HashMap<>();
 
     public Derivative(long startTick, long endTick, double discountFactor) {
         this.startTick = startTick;
@@ -57,10 +58,24 @@ public abstract class Derivative {
         }
     }
 
+    protected abstract double uniqueExposureCalculation(double price, Trader trader);
+
+    protected abstract Trader getCounterparty(Trader current);
+
     protected abstract void calculateStartingValue(double stockPrice);
 
-    public abstract void calculateExpectedExposure(long duration, double stockPrice, RandomGenerator generator, Agent<Globals> trader, Globals globals);
+    public void calculateExpectedExposure(long duration, double stockPrice, RandomGenerator generator, Trader trader, Globals globals){
+        int noOfTrials = 1000;
+        double[][] prices = trader.monteCarlo((int) duration, stockPrice, generator, globals, noOfTrials);
+        double timeStep = globals.timeStep;
+        for (int i = 0; i < prices.length; i++) {
+            double exposure = Arrays.stream(prices[i]).map(val -> uniqueExposureCalculation(val,trader)).filter(val -> val > 0).sum() / noOfTrials;
+            expectedExposure.put(timeStep * i,  exposure);
+        }
+
+    }
 
     public abstract double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility, Trader owner);
 
+    public abstract double getAgreedValue();
 }

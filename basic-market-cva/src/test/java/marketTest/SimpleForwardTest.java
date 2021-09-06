@@ -120,17 +120,28 @@ public class SimpleForwardTest {
         }
 
         @Override
+        protected double uniqueExposureCalculation(double price, Trader trader) {
+            return 0;
+        }
+
+        @Override
+        protected Trader getCounterparty(Trader current) {
+            return null;
+        }
+
+        @Override
         protected void calculateStartingValue(double timeStep) {
 
         }
 
-        @Override
-        public void calculateExpectedExposure(long duration, double stockPrice, RandomGenerator generator, Agent<Globals> trader, Globals globals) {
-
-        }
 
         @Override
         public double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility, Trader owner) {
+            return 0;
+        }
+
+        @Override
+        public double getAgreedValue() {
             return 0;
         }
 

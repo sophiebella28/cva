@@ -32,6 +32,9 @@ public class Globals extends GlobalState {
     @Input(name = "Volatility of Information Signal")
     public double volatilityInfo = 0.001;
 
+    @Input(name = "Lambda")
+    public double lambda = 8;
+
     public double informationSignal = new Random().nextGaussian() * volatilityInfo;
 
     @Input(name = "Momentum: Short Term Average")
@@ -47,4 +50,7 @@ public class Globals extends GlobalState {
 
     @Input(name = "Interest Rate On CDS")
     public double cdsInterestRate = 0.01;
+
+    @Input(name = "Level of Var")
+    public double varLevel = 0.99;
 }

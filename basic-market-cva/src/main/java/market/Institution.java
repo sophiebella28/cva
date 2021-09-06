@@ -46,8 +46,6 @@ public class Institution extends InstitutionBase {
         super.init();
         portfolio = new Portfolio();
         random = this.getPrng().generator;
-        totalMoney = 1500;
-        numberOfAssets = 10;
         tradingThresh = random.nextGaussian();
     }
 
