@@ -82,8 +82,8 @@ public abstract class Trader extends Agent<Globals> {
 
                     // todo: sophie it is unacceptable to have this code here. move it. make it legible
                     //System.out.println("Total Expected Exposure in cva: " + totalExpectedExposure);
-                    double hedgingNotional = totalExpectedExposure / duration;
-                    //System.out.println("Hedging Notional is " + hedgingNotional);
+                    double hedgingNotional = totalExpectedExposure * 4;
+                    System.out.println("Hedging Notional is " + hedgingNotional);
                     //System.out.println("Agreed Value is " + derivative.getAgreedValue());
                     if (hedgingNotional > 0) {
                         CDS cds = new CDS(this, currentTick, currentTick + 1, hedgingNotional, 0.01, derivative.getCounterparty(this)); // FUCK
@@ -103,9 +103,7 @@ public abstract class Trader extends Agent<Globals> {
         List<Derivative> derivativeList = portfolio.derivativeList;
         int timePeriodOfVar = 1;
         valueAtRisk = 0;
-        double[][] prices = monteCarlo(timePeriodOfVar, stockPrice, getPrng().generator, getGlobals(), 5000);
-
-
+        double[][] prices = monteCarlo(timePeriodOfVar, stockPrice, getPrng().generator, getGlobals(), 1000);
         if (portfolio.derivativeIsEmpty()) {
             valueAtRisk = 0;
         } else {

@@ -65,7 +65,7 @@ public abstract class Derivative {
     protected abstract void calculateStartingValue(double stockPrice);
 
     public void calculateExpectedExposure(long duration, double stockPrice, RandomGenerator generator, Trader trader, Globals globals){
-        int noOfTrials = 5000;
+        int noOfTrials = 1000;
         double[][] prices = trader.monteCarlo((int) duration, stockPrice, generator, globals, noOfTrials);
         double timeStep = globals.timeStep;
         for (int i = 0; i < prices.length; i++) {
