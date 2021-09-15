@@ -1,3 +1,6 @@
+# parquet files
+/basic-market-cva/outputs
+
 # Compiled class file
 *.class
 

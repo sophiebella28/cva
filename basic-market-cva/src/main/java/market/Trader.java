@@ -83,7 +83,7 @@ public abstract class Trader extends Agent<Globals> {
                     // todo: sophie it is unacceptable to have this code here. move it. make it legible
                     //System.out.println("Total Expected Exposure in cva: " + totalExpectedExposure);
                     double hedgingNotional = totalExpectedExposure * 4;
-                    System.out.println("Hedging Notional is " + hedgingNotional);
+                    //System.out.println("Hedging Notional is " + hedgingNotional);
                     //System.out.println("Agreed Value is " + derivative.getAgreedValue());
                     if (hedgingNotional > 0) {
                         CDS cds = new CDS(this, currentTick, currentTick + 1, hedgingNotional, 0.01, derivative.getCounterparty(this)); // FUCK
