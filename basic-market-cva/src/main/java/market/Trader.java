@@ -39,7 +39,7 @@ public abstract class Trader extends Agent<Globals> {
     public double calculatePortfolioValue() {
         double total = 0.0;
         for (Derivative derivative : portfolio.derivativeList) {
-            if(getContext().getTick() <= derivative.endTick) {
+            if (getContext().getTick() <= derivative.endTick) {
                 total += derivative.getCurrentValue(getContext().getTick(), getGlobals().timeStep, 0.05, getGlobals().volatility, this);
             }
         }
@@ -82,21 +82,114 @@ public abstract class Trader extends Agent<Globals> {
 
                     // todo: sophie it is unacceptable to have this code here. move it. make it legible
                     //System.out.println("Total Expected Exposure in cva: " + totalExpectedExposure);
-                    double hedgingNotional = totalExpectedExposure * 4;
+                    derivative.hedgingNotional = totalExpectedExposure / duration;
                     //System.out.println("Hedging Notional is " + hedgingNotional);
                     //System.out.println("Agreed Value is " + derivative.getAgreedValue());
-                    if (hedgingNotional > 0) {
-                        CDS cds = new CDS(this, currentTick, currentTick + 1, hedgingNotional, 0.01, derivative.getCounterparty(this)); // FUCK
-                        getLinks(Links.HedgingLink.class).send(Messages.BuyCDS.class, (msg, link) -> {
-                            msg.tobuy = cds;
-                        });
-                        portfolio.add(cds);
-                    }
+                    // when no longer one tick hedges - find out amount of protection on counterparty
+                    // then work out the amount of protection that we want
+                    // this might involve selling cds so uh? thats probably FINE
+                    //
+
 
                 }
             }
             cvaPercent = (1 - recoveryRate) * cvaSum;
         }
+    }
+
+    private void runOutHedging(long currentTick) {
+        // stream hedging list and find all counterparties we have cds on
+        // stream derivative list and find all counterparties we have contracts with
+        // if any have run out then work out how much we want to buy
+        List<Trader> protectionOnList = portfolio.hedgingList.stream().filter(cds -> cds.endTick >= currentTick).map(cds -> cds.protectionOn).collect(Collectors.toList());
+
+        List<Trader> contractsWithList = portfolio.derivativeList.stream().filter(derivative -> derivative.endTick >= currentTick).map(derivative -> derivative.getCounterparty(this)).collect(Collectors.toList());
+        List<Trader> partiesToBuyCDS = new ArrayList<>(contractsWithList);
+        partiesToBuyCDS.removeAll(protectionOnList);
+        Map<Trader, Double> hedgeMap = new HashMap<>();
+
+
+        for (Derivative derivative : portfolio.derivativeList) {
+            //if we already have coverage on the counterparty then we dont want to buy anymore coverage
+            // so that means
+            // if hedginglist contains protection bought on counterparty of this trade
+            // NO
+            // we want to total all of the notionals for each counterparty
+            // and then buy cds for them all in one go
+            Trader counterparty = derivative.getCounterparty(this);
+            if (derivative.hedgingNotional > 0 && partiesToBuyCDS.contains(counterparty)) {
+                if (hedgeMap.containsKey(counterparty)) {
+                    hedgeMap.put(counterparty, hedgeMap.get(counterparty) + derivative.hedgingNotional);
+                } else {
+                    hedgeMap.put(counterparty, derivative.hedgingNotional);
+                }
+            }
+        }
+        for (Map.Entry<Trader, Double> entry : hedgeMap.entrySet()) {
+            Trader counterparty = entry.getKey();
+            double notional = entry.getValue();
+            int cdsLengthInYears = getPrng().generator.nextInt(10);
+            long cdsLengthInTicks =  Math.round(cdsLengthInYears/getGlobals().timeStep);
+            purchaseCDS(currentTick, cdsLengthInTicks,notional, counterparty);
+        }
+    }
+
+    private void addOnHedging(long currentTick) {
+        Map<Trader, Double> hedgeMap = new HashMap<>();
+        for (Derivative derivative : portfolio.derivativeList) {
+            Trader counterparty = derivative.getCounterparty(this);
+            if (derivative.hedgingNotional > 0 ) {
+                if (hedgeMap.containsKey(counterparty)) {
+                    hedgeMap.put(counterparty, hedgeMap.get(counterparty) + derivative.hedgingNotional);
+                } else {
+                    hedgeMap.put(counterparty, derivative.hedgingNotional);
+                }
+            }
+        }
+        for (Map.Entry<Trader, Double> entry : hedgeMap.entrySet()) {
+            Trader counterparty = entry.getKey();
+            double notional = entry.getValue();
+            double currentProtection = portfolio.hedgingList.stream().filter(cds -> cds.buyer == counterparty).map(cds -> cds.notional).reduce(0.0,Double::sum);
+            if(notional > currentProtection) {
+                int cdsLengthInYears = getPrng().generator.nextInt(10);
+                long cdsLengthInTicks =  Math.round(cdsLengthInYears/getGlobals().timeStep);
+                purchaseCDS(currentTick,cdsLengthInTicks,notional - currentProtection, counterparty);
+            }
+        }
+    }
+
+    private void everyTickHedging(long currentTick) {
+        for (Derivative derivative : portfolio.derivativeList) {
+            Trader counterparty = derivative.getCounterparty(this);
+            if (derivative.hedgingNotional > 0 ) {
+                purchaseCDS(currentTick, 1,derivative.hedgingNotional, counterparty);
+            }
+        }
+    }
+
+    private void purchaseCDS(long currentTick, long cdsLength, Double notional, Trader counterparty) {
+        CDS cds = new CDS(this, currentTick, currentTick + cdsLength, notional, 0.01, counterparty);
+        getLinks(Links.HedgingLink.class).send(Messages.BuyCDS.class, (msg, link) -> {
+            msg.tobuy = cds;
+        });
+        portfolio.add(cds);
+    }
+
+    public static Action<Trader> sendHedges(long currentTick) {
+        return action(
+                trader -> {
+                    switch(trader.getGlobals().hedgingStrategy) {
+                        case EVERY:
+                            trader.everyTickHedging(currentTick);
+                            break;
+                        case RUNOUT:
+                            trader.runOutHedging(currentTick);
+                            break;
+                        case ADDON:
+                            trader.addOnHedging(currentTick);
+                            break;
+                    }
+                });
     }
 
     void calculateVaR(long currentTick, double stockPrice) {
@@ -184,7 +277,7 @@ public abstract class Trader extends Agent<Globals> {
                 trader -> {
                     double stockPrice = trader.getMessageOfType(Messages.UpdateFields.class).price;
                     trader.updateCva(currentTick, stockPrice);
-                    trader.calculateVaR(currentTick,stockPrice);
+                    trader.calculateVaR(currentTick, stockPrice);
                     double totalValueChange = trader.getMessagesOfType(Messages.ChangeValue.class).stream().map(link -> link.valueChange).reduce(0.0, Double::sum);
                     int totalAssetChange = trader.getMessagesOfType(Messages.ChangeAssets.class).stream().map(link -> link.noOfAssets).reduce(0, Integer::sum);
                     trader.totalMoney += totalValueChange;
@@ -202,7 +295,9 @@ public abstract class Trader extends Agent<Globals> {
     public static Action<Trader> cdsGains() {
         return action(
                 trader -> {
-                    double totalValueChange = trader.getMessagesOfType(Messages.ChangeValue.class).stream().map(link -> link.valueChange).reduce(0.0, Double::sum);
+                    List<CDS> cdss = trader.getMessagesOfType(Messages.CDSMessage.class).stream().map(link -> link.cds).collect(Collectors.toList());
+                    trader.portfolio.hedgingList.removeAll(cdss);
+                    double totalValueChange = cdss.stream().map(cds -> cds.notional * (1 - trader.getGlobals().recoveryRate)).reduce(0.0, Double::sum);
                     trader.totalMoney += totalValueChange;
                     trader.totalValue = trader.calculatePortfolioValue();
                 });

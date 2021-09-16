@@ -46,5 +46,8 @@ public class Messages {
     public List<Trader> defaulted;
   }
 
+  public static class CDSMessage extends Message {
+    public CDS cds;
+  }
 
 }

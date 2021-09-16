@@ -9,6 +9,7 @@ public abstract class Derivative {
     long startTick;
     public long endTick;
     double discountFactor;
+    double hedgingNotional;
 
     HashMap<Double, Double> counterPartySurvives;
     HashMap<Double, Double> expectedExposure = new HashMap<>();

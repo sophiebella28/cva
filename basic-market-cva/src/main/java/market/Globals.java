@@ -53,4 +53,18 @@ public class Globals extends GlobalState {
 
     @Input(name = "Level of Var")
     public double varLevel = 0.99;
+
+    @Input(name = "Add On CDS Hedging Strategy")
+    public boolean addOnHedge = false;
+
+    @Input(name = "Every Tick Hedging Strategy (default)")
+    public boolean everyTickHedge = true;
+
+    @Input(name = "Run Out Hedging Strategy")
+    public boolean runOutHedge = false;
+
+    public HedgingStrategy hedgingStrategy = HedgingStrategy.EVERY;
+
+
 }
+

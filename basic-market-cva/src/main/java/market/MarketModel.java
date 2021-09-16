@@ -9,7 +9,6 @@ import simudyne.core.abm.Split;
 import java.util.Random;
 
 
-//@ModelSettings(timeUnit = "DAYS")
 public class MarketModel extends AgentBasedModel<Globals> {
     {
         registerAgentTypes(Institution.class, PricingDesk.class, MomentumInstitution.class, CDSDesk.class);
@@ -38,6 +37,14 @@ public class MarketModel extends AgentBasedModel<Globals> {
 
         cdsGroup.fullyConnected(priceGroup, Links.HedgingLink.class);
 
+        if(getGlobals().addOnHedge) {
+            getGlobals().hedgingStrategy = HedgingStrategy.ADDON;
+        } else if (getGlobals().runOutHedge) {
+            getGlobals().hedgingStrategy = HedgingStrategy.RUNOUT;
+        } else {
+            getGlobals().hedgingStrategy = HedgingStrategy.EVERY;
+        }
+
         super.setup();
     }
 
@@ -48,11 +55,16 @@ public class MarketModel extends AgentBasedModel<Globals> {
         getGlobals().informationSignal = new Random().nextGaussian() * getGlobals().volatilityInfo;
 
         Sequence makeTradesAndHedges = Sequence.create(InstitutionBase.sendTrades(), PricingDesk.calcPrices(),
-                Split.create(Trader.updateFields(getContext().getTick()), CDSDesk.updateValues()), CDSDesk.createHedges());
+                Split.create(Trader.updateFields(getContext().getTick()), CDSDesk.updateValues()));
+        //todo: update the desk values better
+
+        Sequence makeHedges = Sequence.create(Trader.sendHedges(getContext().getTick()), CDSDesk.createHedges());
 
         Sequence checkDefault = Sequence.create(InstitutionBase.checkDefault(), PricingDesk.closeDefaultedTrades(), CDSDesk.evaluateCds(),Trader.cdsGains());
 
-        run(makeTradesAndHedges,checkDefault);
+        run(makeTradesAndHedges);
+        run(makeHedges);
+        run(checkDefault);
 
         getGlobals().time = getContext().getTick() * getGlobals().timeStep;
     }

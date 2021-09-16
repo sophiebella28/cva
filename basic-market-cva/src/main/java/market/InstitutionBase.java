@@ -38,6 +38,7 @@ public abstract class InstitutionBase extends Trader {
     public static Action<InstitutionBase> checkDefault() {
         return action(instBase -> {
             if (instBase.totalMoney < 0) {
+                System.out.println("MADE IT");
                 instBase.getLinks(Links.MarketLink.class).send(Messages.DefaultNotification.class, (msg, link) -> msg.defaulted = instBase);
                 instBase.totalMoney = 1500; // todo: add global variables
                 instBase.numberOfAssets = 10;
