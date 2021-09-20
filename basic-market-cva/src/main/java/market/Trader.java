@@ -80,15 +80,9 @@ public abstract class Trader extends Agent<Globals> {
 
                     }
 
-                    // todo: sophie it is unacceptable to have this code here. move it. make it legible
-                    //System.out.println("Total Expected Exposure in cva: " + totalExpectedExposure);
+
                     derivative.hedgingNotional = totalExpectedExposure / duration;
-                    //System.out.println("Hedging Notional is " + hedgingNotional);
-                    //System.out.println("Agreed Value is " + derivative.getAgreedValue());
-                    // when no longer one tick hedges - find out amount of protection on counterparty
-                    // then work out the amount of protection that we want
-                    // this might involve selling cds so uh? thats probably FINE
-                    //
+
 
 
                 }
@@ -201,8 +195,6 @@ public abstract class Trader extends Agent<Globals> {
             valueAtRisk = 0;
         } else {
             Map<Trader, List<Derivative>> counterToDerivativeMap = new HashMap<>();
-
-            double timeStep = getGlobals().timeStep;
             for (Derivative derivative : derivativeList) {
                 if (currentTick <= derivative.endTick) {
                     Trader counterparty = derivative.getCounterparty(this);
@@ -278,13 +270,20 @@ public abstract class Trader extends Agent<Globals> {
                     double stockPrice = trader.getMessageOfType(Messages.UpdateFields.class).price;
                     trader.updateCva(currentTick, stockPrice);
                     trader.calculateVaR(currentTick, stockPrice);
+                    if (trader instanceof InstitutionBase) {
+                        ((InstitutionBase) trader).updateInfo();
+                    }
+                });
+    }
+
+    public static Action<Trader> updateValues() {
+        return action(
+                trader -> {
                     double totalValueChange = trader.getMessagesOfType(Messages.ChangeValue.class).stream().map(link -> link.valueChange).reduce(0.0, Double::sum);
                     int totalAssetChange = trader.getMessagesOfType(Messages.ChangeAssets.class).stream().map(link -> link.noOfAssets).reduce(0, Integer::sum);
                     trader.totalMoney += totalValueChange;
                     trader.numberOfAssets += totalAssetChange;
-                    if (trader instanceof InstitutionBase) {
-                        ((InstitutionBase) trader).updateInfo();
-                    }
+
                     trader.totalValue = trader.calculatePortfolioValue();
                     // System.out.println("total value is " + trader.totalValue);
                     // am a bit concerned about negatives in the portfolio value

@@ -1,23 +1,17 @@
 package market;
 
-import org.apache.commons.math3.random.RandomGenerator;
-import simudyne.core.abm.Agent;
-
-import java.util.Arrays;
-import java.util.HashMap;
-
 public class Forward extends Derivative {
     AssetType assetType;
-    Trader floating;
-    Trader fixed;
+    Trader buyer;
+    Trader seller;
     int amountOfAsset = 0;
     double agreedValue = 0;
     // todo: research whether forwards have interest rates
 
-    public Forward(Trader fixed, Trader floating, long startTick, long endTick, double discountFactor, AssetType assetType, int amountOfAsset, double timeStep) {
+    public Forward(Trader seller, Trader buyer, long startTick, long endTick, double discountFactor, AssetType assetType, int amountOfAsset, double timeStep) {
         super(startTick, endTick, discountFactor);
-        this.fixed = fixed;
-        this.floating = floating;
+        this.seller = seller;
+        this.buyer = buyer;
         this.assetType = assetType;
         this.amountOfAsset = amountOfAsset;
         calculateStartingValue(assetType.getPrice());
@@ -28,7 +22,7 @@ public class Forward extends Derivative {
     protected double uniqueExposureCalculation(double price, Trader trader) {
         //System.out.println("Agreed value is " + agreedValue);
         //System.out.println("Price is " + price);
-        if (trader == floating) {
+        if (trader == buyer) {
             return agreedValue - price;
 
         } else {
@@ -41,7 +35,7 @@ public class Forward extends Derivative {
         double stockPrice = assetType.getPrice();
         double f = (stockPrice - agreedValue) * Math.exp(-interestRate * ((currentTick - startTick) * timeStep));
 
-        return (owner == fixed) ? f * agreedValue : -f * agreedValue;
+        return (owner == seller) ? f * agreedValue : -f * agreedValue;
     }
 
     @Override
@@ -64,10 +58,10 @@ public class Forward extends Derivative {
 
     @Override
     protected Trader getCounterparty(Trader current) {
-        if (current == floating) {
-            return fixed;
+        if (current == buyer) {
+            return seller;
         }
-        return floating;
+        return buyer;
 
     }
 }

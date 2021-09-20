@@ -55,16 +55,16 @@ public class MarketModel extends AgentBasedModel<Globals> {
         getGlobals().informationSignal = new Random().nextGaussian() * getGlobals().volatilityInfo;
 
         Sequence makeTradesAndHedges = Sequence.create(InstitutionBase.sendTrades(), PricingDesk.calcPrices(),
-                Split.create(Trader.updateFields(getContext().getTick()), CDSDesk.updateValues()));
-        //todo: update the desk values better
+                Trader.updateFields(getContext().getTick()));
 
         Sequence makeHedges = Sequence.create(Trader.sendHedges(getContext().getTick()), CDSDesk.createHedges());
 
         Sequence checkDefault = Sequence.create(InstitutionBase.checkDefault(), PricingDesk.closeDefaultedTrades(), CDSDesk.evaluateCds(),Trader.cdsGains());
-
+        Sequence closeTrades = Sequence.create(PricingDesk.closeTrades(getContext().getTick()), Split.create(Trader.updateValues(), CDSDesk.updateValues()));
         run(makeTradesAndHedges);
         run(makeHedges);
         run(checkDefault);
+        run(closeTrades);
 
         getGlobals().time = getContext().getTick() * getGlobals().timeStep;
     }

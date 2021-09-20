@@ -59,9 +59,6 @@ public class PricingDesk extends Trader {
                 addCallOption(pricingDesk, pricingDesk, inst);
             }
 
-
-            // todo: change this so it is fueled by the market demand
-
             int netDemand = buys - sells;
 
             double priceChange = 0.0;
@@ -82,7 +79,6 @@ public class PricingDesk extends Trader {
                 msg.priceChange = finalPriceChange;
                 msg.price = pricingDesk.price;
             });
-            pricingDesk.closeTrades(pricingDesk.getContext().getTick());
         });
     }
 
@@ -109,16 +105,16 @@ public class PricingDesk extends Trader {
         seller.addDerivativeToPortfolio(callOption);
     }
 
-    public void closeTrades(long currentTick) {
-        List<Derivative> derivativeList = portfolio.derivativeList;
+    public static Action<PricingDesk> closeTrades(long currentTick) {
+        return action(desk -> {
+        List<Derivative> derivativeList = desk.portfolio.derivativeList;
         for (Derivative derivative : derivativeList) {
             if (derivative.endTick == currentTick) {
                 if (derivative instanceof Forward) {
                     Forward forward = (Forward) derivative;
-                    Trader floating = forward.floating;
-                    Trader fixed = forward.fixed;
-                    sendValueChanges(floating, fixed, forward.amountOfAsset, forward.agreedValue * forward.amountOfAsset);
-                    totalMoney += forward.amountOfAsset * (forward.agreedValue - forward.assetType.getPrice());
+                    Trader floating = forward.buyer;
+                    Trader fixed = forward.seller;
+                    desk.sendValueChanges(floating, fixed, forward.amountOfAsset, forward.agreedValue * forward.amountOfAsset);
 
                     // need a measure of whether or not this was actually lost idk
                 }
@@ -127,30 +123,29 @@ public class PricingDesk extends Trader {
                     Trader buyer = option.buyer;
                     Trader seller = option.seller;
                     if (option.agreedValue < option.assetType.getPrice()) {
-                        sendValueChanges(buyer, seller, option.amountOfAsset, option.agreedValue * option.amountOfAsset);
-                        totalMoney += option.amountOfAsset * (option.agreedValue - option.assetType.getPrice());
+                        desk.sendValueChanges(buyer, seller, option.amountOfAsset, option.agreedValue * option.amountOfAsset);
 
                     }
                 }
             }
         }
-        for (CDS cds : portfolio.hedgingList) {
+        for (CDS cds : desk.portfolio.hedgingList) {
             if (currentTick == cds.startTick || (currentTick - cds.startTick) % 12 == 0) {
                 Trader trader = cds.buyer;
-                CDSDesk desk = cds.desk;
-                sendValueChanges(trader, desk, 0, cds.yearly * cds.notional);
+                desk.sendValueChanges(trader, desk, 0, cds.yearly * cds.notional);
 
             }
         }
+        });
     }
 
-    private void sendValueChanges(Agent<Globals> floating, Agent<Globals> fixed, int amountOfAsset, double valueChange) {
+    private void sendValueChanges(Agent<Globals> buyer, Agent<Globals> seller, int amountOfAsset, double valueChange) {
 
-        send(Messages.ChangeValue.class, (msg) -> msg.valueChange = valueChange).to(fixed.getID());
-        send(Messages.ChangeValue.class, (msg) -> msg.valueChange = -valueChange).to(floating.getID());
+        send(Messages.ChangeValue.class, (msg) -> msg.valueChange = valueChange).to(seller.getID());
+        send(Messages.ChangeValue.class, (msg) -> msg.valueChange = -valueChange).to(buyer.getID());
 
-        send(Messages.ChangeAssets.class, (msg) -> msg.noOfAssets = -amountOfAsset).to(fixed.getID());
-        send(Messages.ChangeAssets.class, (msg) -> msg.noOfAssets = amountOfAsset).to(floating.getID());
+        send(Messages.ChangeAssets.class, (msg) -> msg.noOfAssets = -amountOfAsset).to(seller.getID());
+        send(Messages.ChangeAssets.class, (msg) -> msg.noOfAssets = amountOfAsset).to(buyer.getID());
 
     }
 
@@ -160,7 +155,7 @@ public class PricingDesk extends Trader {
             List<Derivative> defaultedTrades = new ArrayList<>();
             for (Derivative derivative : pricingDesk.portfolio.derivativeList) {
                 if (derivative instanceof Forward) {
-                    if (defaultedList.contains(((Forward) derivative).floating)) {
+                    if (defaultedList.contains(((Forward) derivative).buyer)) {
                         pricingDesk.totalMoney += pricingDesk.getGlobals().recoveryRate * ((Forward) derivative).agreedValue; //todo: is this actually what they get??? i forgot oops
                         defaultedTrades.add(derivative);
                     }
