@@ -63,6 +63,15 @@ public class Globals extends GlobalState {
     @Input(name = "Run Out Hedging Strategy")
     public boolean runOutHedge = false;
 
+    @Input(name = "Starting Money")
+    public double startingMoney = 200;
+
+    @Input(name = "Central Starting Assets")
+    public double centralStartingAssets = 100;
+
+    @Input(name = "Institution Starting Assets")
+    public double instStartingAssets = 10;
+
     public HedgingStrategy hedgingStrategy = HedgingStrategy.EVERY;
 
 

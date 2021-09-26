@@ -10,6 +10,7 @@ public abstract class Derivative {
     public long endTick;
     double discountFactor;
     double hedgingNotional;
+    private long hedgingTick = 0;
 
     HashMap<Double, Double> counterPartySurvives;
     HashMap<Double, Double> expectedExposure = new HashMap<>();
@@ -21,6 +22,15 @@ public abstract class Derivative {
         counterPartySurvives = new HashMap<>();
         counterPartySurvives.put(0.0, 1.00);
 
+    }
+
+    public void setHedgingNotional(double amount, long currentTick) {
+        if(currentTick == hedgingTick) {
+            hedgingNotional += amount;
+        } else {
+            hedgingNotional = amount;
+            hedgingTick = currentTick;
+        }
     }
 
     private double getPrevCounterParty(long atTick, double timeStep) {

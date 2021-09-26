@@ -1,12 +1,14 @@
 package market;
 
 import org.apache.commons.math3.random.RandomGenerator;
+import org.json4s.JsonUtil;
 import simudyne.core.abm.Action;
 import simudyne.core.abm.Agent;
 import simudyne.core.annotations.Variable;
 import simudyne.core.functions.SerializableConsumer;
 
 import java.util.*;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public abstract class Trader extends Agent<Globals> {
@@ -80,8 +82,8 @@ public abstract class Trader extends Agent<Globals> {
 
                     }
 
-
-                    derivative.hedgingNotional = totalExpectedExposure / duration;
+                    
+                    derivative.setHedgingNotional(totalExpectedExposure,currentTick);
 
 
 
@@ -104,12 +106,6 @@ public abstract class Trader extends Agent<Globals> {
 
 
         for (Derivative derivative : portfolio.derivativeList) {
-            //if we already have coverage on the counterparty then we dont want to buy anymore coverage
-            // so that means
-            // if hedginglist contains protection bought on counterparty of this trade
-            // NO
-            // we want to total all of the notionals for each counterparty
-            // and then buy cds for them all in one go
             Trader counterparty = derivative.getCounterparty(this);
             if (derivative.hedgingNotional > 0 && partiesToBuyCDS.contains(counterparty)) {
                 if (hedgeMap.containsKey(counterparty)) {
@@ -143,7 +139,7 @@ public abstract class Trader extends Agent<Globals> {
         for (Map.Entry<Trader, Double> entry : hedgeMap.entrySet()) {
             Trader counterparty = entry.getKey();
             double notional = entry.getValue();
-            double currentProtection = portfolio.hedgingList.stream().filter(cds -> cds.buyer == counterparty).map(cds -> cds.notional).reduce(0.0,Double::sum);
+            double currentProtection = portfolio.hedgingList.stream().filter(cds -> cds.protectionOn == counterparty && cds.endTick >= currentTick).map(cds -> cds.notional).reduce(0.0,Double::sum);
             if(notional > currentProtection) {
                 int cdsLengthInYears = getPrng().generator.nextInt(10);
                 long cdsLengthInTicks =  Math.round(cdsLengthInYears/getGlobals().timeStep);
@@ -172,6 +168,7 @@ public abstract class Trader extends Agent<Globals> {
     public static Action<Trader> sendHedges(long currentTick) {
         return action(
                 trader -> {
+                    //System.out.println(trader.getGlobals().hedgingStrategy);
                     switch(trader.getGlobals().hedgingStrategy) {
                         case EVERY:
                             trader.everyTickHedging(currentTick);

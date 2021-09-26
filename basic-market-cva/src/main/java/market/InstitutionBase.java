@@ -40,8 +40,8 @@ public abstract class InstitutionBase extends Trader {
             if (instBase.totalMoney < 0) {
                 System.out.println("MADE IT");
                 instBase.getLinks(Links.MarketLink.class).send(Messages.DefaultNotification.class, (msg, link) -> msg.defaulted = instBase);
-                instBase.totalMoney = 1500; // todo: add global variables
-                instBase.numberOfAssets = 10;
+                instBase.totalMoney = instBase.getGlobals().startingMoney;
+                instBase.numberOfAssets = instBase.getGlobals().instStartingAssets;
             }
         });
     }
@@ -49,8 +49,8 @@ public abstract class InstitutionBase extends Trader {
     @Override
     public void init() {
         super.init();
-        totalMoney = 0;
-        numberOfAssets = 10;
+        totalMoney = getGlobals().startingMoney;
+        numberOfAssets = getGlobals().instStartingAssets;
         portfolio = new Portfolio();
     }
 

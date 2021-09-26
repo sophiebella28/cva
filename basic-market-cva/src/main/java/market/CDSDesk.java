@@ -44,7 +44,7 @@ public class CDSDesk extends Agent<Globals> {
                     cdsDesk.getMessagesOfType(Messages.DefaultList.class).forEach(x -> defaultList.addAll(x.defaulted));
                     List<CDS> completed = new ArrayList<>();
                     for (CDS cds : cdsDesk.portfolio.hedgingList) {
-                        if (defaultList.contains(cds.protectionOn)) {
+                        if (defaultList.contains(cds.protectionOn) && cds.endTick <= cdsDesk.getContext().getTick()) {
 
                             cdsDesk.send(Messages.CDSMessage.class, (msg) -> msg.cds = cds).to(cds.buyer.getID());
                             cdsDesk.totalMoney -= (1 - cdsDesk.getGlobals().recoveryRate) * cds.notional;

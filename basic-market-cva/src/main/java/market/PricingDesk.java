@@ -21,8 +21,8 @@ public class PricingDesk extends Trader {
     public void init() {
         super.init();
         bankAsset = new BankAsset();
-        totalMoney = 0;
-        numberOfAssets = 100;
+        totalMoney = getGlobals().startingMoney;
+        numberOfAssets = getGlobals().centralStartingAssets;
         portfolio = new Portfolio();
     }
 
