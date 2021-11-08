@@ -9,8 +9,8 @@ public class Portfolio {
 
     List<CDS> hedgingList;
 
-
-
+    // stores a list of derivatives and a list of hedges on those derivatives
+    // currently there is one portfolio per counterparty but it could be interesting to add multiple for one trader
     public Portfolio() {
         derivativeList = new ArrayList<>();
         hedgingList = new ArrayList<>();
@@ -19,10 +19,6 @@ public class Portfolio {
 
     public boolean derivativeIsEmpty() {
         return derivativeList.isEmpty();
-    }
-
-    public boolean hedgingIsEmpty() {
-        return hedgingList.isEmpty();
     }
 
     public void add(Derivative derivative) {

@@ -31,6 +31,8 @@ public class CallOption extends Derivative {
     }
 
 
+    // as the purchaser can decide not to exercise the call option, it can never have positive exposure to them
+    // so only ever has exposure to the buyer
     @Override
     protected double uniqueExposureCalculation(double price, Trader trader) {
         if (trader == buyer) {
@@ -39,6 +41,7 @@ public class CallOption extends Derivative {
         return 0.0;
     }
 
+    // uses option pricing formulae to find the current values
     @Override
     public double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility, Trader owner) {
         double stockPrice = assetType.getPrice();
@@ -48,10 +51,10 @@ public class CallOption extends Derivative {
         double d2 = d1 - sigmaRootT;
         NormalDistribution normal = new NormalDistribution();
         double c = stockPrice * normal.cumulativeProbability(d1) - agreedValue * Math.exp(-interestRate * currentTime) * normal.cumulativeProbability(d2);
-        //System.out.println(c);
         return (owner == seller) ? c * amountOfAsset : -c * amountOfAsset;
     }
 
+    // returns expected exposure at the given time by reading it from the map
     @Override
     protected double getExpectedExposure(long atTick, double timeStep) {
         return expectedExposure.getOrDefault(atTick * timeStep, 0.0);
@@ -63,10 +66,5 @@ public class CallOption extends Derivative {
             return seller;
         }
         return buyer;
-    }
-
-    @Override
-    public double getAgreedValue() {
-        return agreedValue;
     }
 }

@@ -24,7 +24,9 @@ public abstract class Derivative {
 
     }
 
+    // sets hedging notional of the given derivative
     public void setHedgingNotional(double amount, long currentTick) {
+        // this logic needs double checking - might be overcounting the hedging
         if(currentTick == hedgingTick) {
             hedgingNotional += amount;
         } else {
@@ -33,8 +35,8 @@ public abstract class Derivative {
         }
     }
 
+    // returns the previous probability that the counterparty survived
     private double getPrevCounterParty(long atTick, double timeStep) {
-        //System.out.println((atTick - 1) * timeStep);
         return counterPartySurvives.get(((atTick - 1) * timeStep));
     }
 
@@ -43,10 +45,12 @@ public abstract class Derivative {
         return Math.sqrt(atTick * timeStep) * 0.01;
     }
 
+    // returns the discount factor as calculated by the equation in gregory's book
     protected double getDiscountFactor(long atTick, double timeStep) {
         return Math.exp(-discountFactor * (atTick * timeStep));
     }
 
+    // calculates default probability by calculating the probability that the counterparty survives at each timestep
     protected double getDefaultProb(long atTick, double riskPercent, double timeStep) {
         if (counterPartySurvives.get(atTick * timeStep) == null) {
             calculateCntptySurvives(atTick, riskPercent, timeStep);
@@ -58,13 +62,11 @@ public abstract class Derivative {
 
     }
 
+    // assumes exponential model for chance of counterparty survival
     protected void calculateCntptySurvives(long atTick, double riskPercent, double timeStep) {
-
         if (atTick == (long) 1) {
             counterPartySurvives.put(atTick * timeStep, 1.00);
-            // System.out.println(counterPartySurvives.get(0.0));
         } else if (counterPartySurvives.get(atTick * timeStep) == null) {
-            //System.out.println(atTick * timeStep);
             counterPartySurvives.put(atTick * timeStep, getPrevCounterParty(atTick, timeStep) * Math.exp(-(timeStep) * riskPercent));
         }
     }
@@ -75,6 +77,8 @@ public abstract class Derivative {
 
     protected abstract void calculateStartingValue(double stockPrice);
 
+    // uses monte carlo methods to estimate the trajectory of the stock prices, and then uses those prices to calculate
+    // the exposure at the end of the time period of the derivative
     public void calculateExpectedExposure(long duration, double stockPrice, RandomGenerator generator, Trader trader, Globals globals){
         int noOfTrials = 1000;
         double[][] prices = trader.monteCarlo((int) duration, stockPrice, generator, globals, noOfTrials);
@@ -87,6 +91,4 @@ public abstract class Derivative {
     }
 
     public abstract double getCurrentValue(double currentTick, double timeStep, double interestRate, double stockVolatility, Trader owner);
-
-    public abstract double getAgreedValue();
 }

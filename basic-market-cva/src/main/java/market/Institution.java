@@ -10,12 +10,10 @@ public class Institution extends InstitutionBase {
     @Variable
     double tradingThresh;
 
-
-
+    // the institution class is essentially a noise trader class - it buys and sells randomly
     private static Action<Institution> action(SerializableConsumer<Institution> consumer) {
         return Action.create(Institution.class, consumer);
     }
-
 
     @Override
     public void buyOrSell() {
@@ -29,11 +27,10 @@ public class Institution extends InstitutionBase {
             }
     }
 
-
-
+    // updates the information signal and has a chance of updating the price change
     @Override
     void updateInfo() {
-        double updateFrequency = 0.01; // todo: make this global
+        double updateFrequency = 0.01; // it would be better if this was a global variable
         if (random.nextDouble() <= updateFrequency) {
             tradingThresh =
                     getMessageOfType(Messages.UpdateFields.class).priceChange;

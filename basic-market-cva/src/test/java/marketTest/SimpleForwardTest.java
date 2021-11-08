@@ -2,10 +2,8 @@ package marketTest;
 
 
 import market.*;
-import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.Before;
 import org.junit.Test;
-import simudyne.core.abm.Agent;
 import simudyne.core.abm.testkit.TestKit;
 import simudyne.core.abm.testkit.TestResult;
 
@@ -34,7 +32,7 @@ public class SimpleForwardTest {
 
         TestResult testResult = testKit.testAction(institution,Institution.updateFields(0));
 
-        assertEquals(0.00085, institution.cvaPercent, 0.00001);
+        assertEquals(0.00085, institution.cva, 0.00001);
     }
 
     public static class TestForward extends Derivative {

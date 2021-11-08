@@ -1,6 +1,5 @@
 package market;
 
-import org.apache.commons.math3.random.RandomGenerator;
 import simudyne.core.annotations.Variable;
 
 
@@ -14,6 +13,8 @@ public class BankAsset implements AssetType{
         return price;
     }
 
+    // the asset that is being traded
+    // currently the model is only using one but it could be expanded to use multiple
 
     @Override
     public double updatePrice(double priceChange) {

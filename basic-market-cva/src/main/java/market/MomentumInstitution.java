@@ -10,6 +10,9 @@ import java.util.Map;
 
 public class MomentumInstitution extends InstitutionBase {
 
+    // a trader that implements the momentum strategy of buying and selling derivatives
+    // this strategy could be improved because its calculating the current averages but is purchasing derivatives that
+    // it wont actually get for a certain period of time
     public double longTermMovingAvg;
 
     public double shortTermMovingAvg;
@@ -20,6 +23,7 @@ public class MomentumInstitution extends InstitutionBase {
         return Action.create(MomentumInstitution.class, consumer);
     }
 
+    // if short term moving average is bigger than long term moving average, buy, otherwise, sell
     @Override
     public void buyOrSell() {
         if (getContext().getTick() > getGlobals().longTermAverage) {
@@ -35,7 +39,7 @@ public class MomentumInstitution extends InstitutionBase {
         }
     }
 
-
+    // calculates the short and long term moving averages
     public double getTermMovingAvg(long nbDays) {
         double totalPrice = historicalPrices.entrySet().stream().filter(a -> a.getKey() > getContext().getTick() - nbDays).mapToDouble(Map.Entry::getValue).sum();
         return totalPrice / nbDays;
@@ -47,6 +51,7 @@ public class MomentumInstitution extends InstitutionBase {
         portfolio = new Portfolio();
     }
 
+    // keeps track of the historical prices for the averages
     @Override
     void updateInfo() {
         historicalPrices.put(getContext().getTick(), getMessageOfType(Messages.UpdateFields.class).price);

@@ -17,6 +17,7 @@ public class PricingDesk extends Trader {
     double price = 9.9;
 
 
+    // initialises the pricingdesk to defaults
     @Override
     public void init() {
         super.init();
@@ -26,13 +27,18 @@ public class PricingDesk extends Trader {
         portfolio = new Portfolio();
     }
 
+    // default function to return actions
     private static Action<PricingDesk> action(SerializableConsumer<PricingDesk> consumer) {
         return Action.create(PricingDesk.class, consumer);
     }
 
+    // receives the message to calculate stock prices and calculates them by using the equation detailed in simudyne docs
+    // for an improvement it could be updated to the chiarella model
     public static Action<PricingDesk> calcPrices() {
         return action(pricingDesk -> {
 
+            // totals up all the different derivates that were purchased and creates them and adds them to its own
+            // portfolio
             List<Trader> floatingList = pricingDesk.getMessagesOfType(Messages.ForwardFloatingTrade.class).stream().map(link -> link.from).collect(Collectors.toList());
             List<Trader> fixedList = pricingDesk.getMessagesOfType(Messages.ForwardFixedTrade.class).stream().map(link -> link.from).collect(Collectors.toList());
 
@@ -61,7 +67,7 @@ public class PricingDesk extends Trader {
 
             int netDemand = buys - sells;
 
-            double priceChange = 0.0;
+            double priceChange;
             if (netDemand == 0) {
                 priceChange = 0.0;
             } else {
@@ -70,6 +76,7 @@ public class PricingDesk extends Trader {
                 priceChange = (netDemand / (double) nbTraders) / lambda;
             }
             pricingDesk.price = pricingDesk.bankAsset.updatePrice(priceChange);
+            // now prices have been calculated it sends the messages to the traders
             double finalPriceChange = priceChange;
             pricingDesk.send(Messages.UpdateFields.class, (msg) -> {
                 msg.priceChange = finalPriceChange;
@@ -82,18 +89,19 @@ public class PricingDesk extends Trader {
         });
     }
 
+    // creates the forward for a randomly generated amount of time
     private static void addForward(PricingDesk PricingDesk, Trader floating, Trader fixed) {
         long startTick = PricingDesk.getContext().getTick();
         long endTick = startTick + (Math.abs(PricingDesk.getPrng().generator.nextInt(10)) + 3);
 
-        // for now only buying one of each asset but might change that
+        // for now only buying one of each asset but could change that
         // changing would involve adding an int to the message so each trader could have strategy
         Forward forwardToAdd = new Forward(fixed, floating, startTick, endTick, 0.05, PricingDesk.bankAsset, 1, PricingDesk.getGlobals().timeStep);
         floating.addDerivativeToPortfolio(forwardToAdd);
         fixed.addDerivativeToPortfolio(forwardToAdd);
-        //System.out.printf("New forward added starting at %d and ending at %d with price %f \n", startTick, endTick, forwardToAdd.getAgreedValue());
     }
 
+    // creates the option for a randomly generated amount of time
     private static void addCallOption(PricingDesk PricingDesk, Trader buyer, Trader seller) {
         long startTick = PricingDesk.getContext().getTick();
         long endTick = startTick + (Math.abs(PricingDesk.getPrng().generator.nextInt(10)) + 3);
@@ -105,6 +113,7 @@ public class PricingDesk extends Trader {
         seller.addDerivativeToPortfolio(callOption);
     }
 
+    // receives the message to check which trades need closing and updates the relevant traders
     public static Action<PricingDesk> closeTrades(long currentTick) {
         return action(desk -> {
         List<Derivative> derivativeList = desk.portfolio.derivativeList;
@@ -115,8 +124,6 @@ public class PricingDesk extends Trader {
                     Trader floating = forward.buyer;
                     Trader fixed = forward.seller;
                     desk.sendValueChanges(floating, fixed, forward.amountOfAsset, forward.agreedValue * forward.amountOfAsset);
-
-                    // need a measure of whether or not this was actually lost idk
                 }
                 if (derivative instanceof CallOption) {
                     CallOption option = (CallOption) derivative;
@@ -139,6 +146,7 @@ public class PricingDesk extends Trader {
         });
     }
 
+    // sends messages to the relevant traders about the amount of assets/money that need to be exchanged
     private void sendValueChanges(Agent<Globals> buyer, Agent<Globals> seller, int amountOfAsset, double valueChange) {
 
         send(Messages.ChangeValue.class, (msg) -> msg.valueChange = valueChange).to(seller.getID());
@@ -149,6 +157,9 @@ public class PricingDesk extends Trader {
 
     }
 
+    // if a company has defaulted, this cycles through all of the trades made with that company and closes them
+    // and also sends a message to all the traders about how that counterparty defaulted so they can total any cds
+    // protection that they purchased
     public static Action<PricingDesk> closeDefaultedTrades() {
         return action(pricingDesk -> {
             List<Trader> defaultedList = pricingDesk.getMessagesOfType(Messages.DefaultNotification.class).stream().map(link -> link.defaulted).collect(Collectors.toList());
