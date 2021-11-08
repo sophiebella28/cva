@@ -1,0 +1,11 @@
+{
+  "source":"Simudyne",
+  "sourceVersion":"2.4.0",
+  "creationDate":"2021-09-24T12:05:54.514Z",
+  "modelName":"market.MarketModel",
+  "format":"parquet",
+  "custom":{
+    
+  },
+  "channels":[]
+}
